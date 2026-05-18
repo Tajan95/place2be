@@ -1,0 +1,2 @@
+## local.properties
+When first pulling the project, you will be missing the local.properties file. This file essentially contains configurations and environment variables that may be sensitive or differ for each user. Use the existing `local.properties.template` file and remove the `.template`-suffix. Whenever adding new properties to the file, add them to the tempplate file as well. You may add a note to what the property should contain.
