@@ -24,13 +24,13 @@ Die Benutzeroberfläche wird mit Jetpack Compose umgesetzt. Dadurch kann UI dekl
 
 Für das visuelle Design wird Material 3 verwendet. Das reduziert Designaufwand und sorgt für ein konsistentes Android-typisches Erscheinungsbild.
 
-**Konsequenz:** Buttons, Cards, Listen, Scaffold-Strukturen und Farbschema orientieren sich an Material 3.
+**Konsequenz:** Buttons, Cards, Bottom-Sheets, Listen, Chips, Scaffold-Strukturen und Farbschema orientieren sich an Material 3.
 
 ## ADR-004: Local-first-MVP statt sofortigem Backend
 
 **Status:** vorläufige Empfehlung
 
-Der MVP wird zunächst lokal bzw. prototypisch umgesetzt. Orte und Bewertungen können über Mock-Daten, In-Memory-Repositories oder später eine lokale Persistenz verwaltet werden. Die Architektur soll jedoch so getrennt werden, dass eine spätere Backend-, Firebase- oder REST-Anbindung möglich bleibt.
+Der MVP wird zunächst lokal bzw. prototypisch umgesetzt. Orte, Bewertungen, Textrezensionen, Bookmarks und Nutzer-Score können über Mock-Daten, In-Memory-Repositories oder später eine lokale Persistenz verwaltet werden. Die Architektur soll jedoch so getrennt werden, dass eine spätere Backend-, Firebase- oder REST-Anbindung möglich bleibt.
 
 **Begründung:** Ein echtes Backend mit Nutzerkonten, zentraler Datenbank, Manipulationsschutz und Synchronisation erhöht den Aufwand stark. Für den aktuellen Projektumfang ist eine stabile, erklärbare und demo-fähige App wichtiger.
 
@@ -40,13 +40,13 @@ Der MVP wird zunächst lokal bzw. prototypisch umgesetzt. Orte und Bewertungen k
 
 **Status:** vorläufige Empfehlung
 
-Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden, etwa durch einen Button „Ich bin vor Ort“ oder eine Demo-Logik.
+Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden. Der Bewertungsbutton bleibt sichtbar, ist aber deaktiviert bzw. ausgegraut, wenn die Vor-Ort-Bestätigung nicht erfüllt ist.
 
 **Begründung:** Echte GPS-Prüfung bringt zusätzliche Komplexität durch Permissions, Datenschutz, Emulator-Setup, ungenaue Standortdaten und Edge Cases.
 
 **Konsequenz:** Die Architektur sollte eine spätere echte Standortprüfung ermöglichen, aber die Live-Demo nicht davon abhängig machen.
 
-## ADR-006: Zeitverfall als Kernbestandteil des Ranking-Systems
+## ADR-006: Bewertungsalter als Kernbestandteil des Ranking-Systems
 
 **Status:** entschieden
 
@@ -56,10 +56,38 @@ Bewertungen sollen nicht dauerhaft gleich stark zählen. Ältere Bewertungen ver
 
 **Konsequenz:** Die Score-Berechnung wird als eigene Logik gekapselt und muss aktuelle Bewertungen stärker gewichten als alte.
 
-## ADR-007: MVP vor Feature-Fülle
+## ADR-007: MVVM- und Feature-orientierte Struktur
 
 **Status:** entschieden
 
-Der MVP konzentriert sich auf Orteliste, Detailansicht, Bewertung und dynamischen Score. Gamification, Nutzerkonten, neue Orte vorschlagen, echte Karte und Backend-Anbindung bleiben zunächst Erweiterungen.
+Jeder größere Screen wird als Feature betrachtet. Pro Feature gibt es eine `Screen`-Datei für Compose-UI und eine `ViewModel`-Datei für UI-Zustand und Screen-Logik. Fachliche Kernlogik liegt nicht in der UI, sondern in `domain/usecase`.
 
-**Konsequenz:** Neue Features werden nur aufgenommen, wenn der MVP stabil funktioniert und die Live-Demo nicht gefährdet wird.
+**Konsequenz:** Score-Berechnung, Reputationslogik und weitere fachliche Regeln bleiben testbar und präsentationsfreundlich erklärbar.
+
+## ADR-008: Mock-Map und Bottom-Sheet statt echter Kartenintegration
+
+**Status:** entschieden für MVP
+
+Der MVP verwendet eine Mock-Map. Ohne ausgewählten Ort zeigt die Map Default-Shortcuts. Nach Auswahl eines Ortes öffnet sich eine Mini-Preview bzw. Schnellübersichtsleiste, die später per Swipe zur Detailansicht erweitert werden kann.
+
+**Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen.
+
+**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann.
+
+## ADR-009: Profil, Nutzer-Score und Review-Reaktionen als MVP-nahe Bestandteile
+
+**Status:** entschieden / teilweise noch zu konkretisieren
+
+Profilseite, Nutzer-Score, Textrezensionen, Likes/Dislikes und Bookmarks sind nach den Mockup-Notizen MVP-relevant oder mindestens MVP-nah vorzubereiten. Der Nutzer-Score soll Aktivität und Reputation abbilden.
+
+**Offen:** Die genaue Normalisierung des Nutzer-Scores und die öffentliche Sichtbarkeit der Bewertungs-Historie müssen noch entschieden werden.
+
+**Konsequenz:** Diese Konzepte werden in Issues und Dokumentation aufgenommen, können aber bei Zeitmangel zunächst mit Mock-Daten oder vereinfachter Logik demonstriert werden.
+
+## ADR-010: Datenschutzbewusste Profilansicht
+
+**Status:** offen / zu entscheiden
+
+Die eigene Bewertungs-Historie kann für den Nutzer selbst hilfreich sein. Eine vollständig öffentliche Historie könnte aber Rückschlüsse auf Identität, Bewegungsmuster oder häufig besuchte Orte erlauben.
+
+**Konsequenz:** Es muss entschieden werden, ob fremde Nutzer nur aggregierte Profilinformationen sehen, während die vollständige Historie privat bleibt.
