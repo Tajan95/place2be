@@ -87,7 +87,8 @@ Aktuelle Tendenz: absoluter Score. Gleichzeitig muss verhindert werden, dass Nut
   </tr>
   <tr>
     <td><img width="500" alt="Handschriftliche Dashboard-/MapScreen-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" /></td>
-    <td><img width="500" alt="place2be Dashboard Mockup 13.07.26" src="./place2be%20Dashboard%20Mockup%2013.07.26.png" /><br><sub>Platzhalter: <code>place2be Dashboard Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
+    <td><img width="500" alt="place2be Dashboard Mockup 13.07.26" src="<img width="941" height="1672" alt="place2be Dashboard Mockup 13 07 26" src="https://github.com/user-attachments/assets/2190d83b-fecf-4d0e-a336-02b39aaa7472" />
+" /><br><sub>Platzhalter: <code>place2be Dashboard Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
   </tr>
 </table>
 
@@ -151,7 +152,8 @@ Wenn der Nutzer Shortcuts wie „beliebte Orte in deiner Nähe“ oder „Orte n
   </tr>
   <tr>
     <td><img width="500" alt="Handschriftliche Detailansicht-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" /></td>
-    <td><img width="500" alt="place2be Detail-Ansicht Mockup 13.07.26" src="./place2be%20Detail-Ansicht%20Mockup%2013.07.26.png" /><br><sub>Platzhalter: <code>place2be Detail-Ansicht Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
+    <td><img width="500" alt="place2be Detail-Ansicht Mockup 13.07.26" src="<img width="941" height="1672" alt="place2be Detail-Ansicht Mockup 13 07 26" src="https://github.com/user-attachments/assets/14c5dfda-1caa-46b1-ae8f-44c046d9f011" />
+" /><br><sub>Platzhalter: <code>place2be Detail-Ansicht Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
   </tr>
 </table>
 
