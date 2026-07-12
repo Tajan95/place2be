@@ -23,7 +23,18 @@ Zusätzlich werden mehrere Querschnittskonzepte sichtbar:
 
 ## 2. Profil-/Nutzerseite
 
-<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56" src="https://github.com/user-attachments/assets/e5321a19-acc1-4bec-8910-b0009d86bd53" />
+<table>
+  <tr>
+    <th>Handschriftliche Skizze</th>
+    <th>Professionelles Mockup (Platzhalter)</th>
+  </tr>
+  <tr>
+    <td><img width="600" height="800" alt="Handschriftliche Profil-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/e5321a19-acc1-4bec-8910-b0009d86bd53" /></td>
+    <td><img width="600" alt="Platzhalter: place2be Nutzerprofil Mockup 13.07.26.png" src="./place2be%20Nutzerprofil%20Mockup%2013.07.26.png" /></td>
+  </tr>
+</table>
+
+> Platzhalter-Datei: `place2be Nutzerprofil Mockup 13.07.26.png`
 
 ### Geplante Inhalte
 
@@ -71,7 +82,18 @@ Aktuelle Tendenz: absoluter Score. Gleichzeitig muss verhindert werden, dass Nut
 
 ## 3. Dashboard / MapScreen
 
-<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56 1" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" />
+<table>
+  <tr>
+    <th>Handschriftliche Skizze</th>
+    <th>Professionelles Mockup (Platzhalter)</th>
+  </tr>
+  <tr>
+    <td><img width="600" height="800" alt="Handschriftliche Dashboard-/MapScreen-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" /></td>
+    <td><img width="600" alt="Platzhalter: place2be Dashboard Mockup 13.07.26.png" src="./place2be%20Dashboard%20Mockup%2013.07.26.png" /></td>
+  </tr>
+</table>
+
+> Platzhalter-Datei: `place2be Dashboard Mockup 13.07.26.png`
 
 ### Default-Zustand ohne ausgewählten Ort
 
@@ -126,7 +148,18 @@ Wenn der Nutzer Shortcuts wie „beliebte Orte in deiner Nähe“ oder „Orte n
 
 ## 4. Detailansicht eines Ortes
 
-<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56 2" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" />
+<table>
+  <tr>
+    <th>Handschriftliche Skizze</th>
+    <th>Professionelles Mockup (Platzhalter)</th>
+  </tr>
+  <tr>
+    <td><img width="600" height="800" alt="Handschriftliche Detailansicht-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" /></td>
+    <td><img width="600" alt="Platzhalter: place2be Detail-Ansicht Mockup 13.07.26.png" src="./place2be%20Detail-Ansicht%20Mockup%2013.07.26.png" /></td>
+  </tr>
+</table>
+
+> Platzhalter-Datei: `place2be Detail-Ansicht Mockup 13.07.26.png`
 
 ### Geplante Elemente
 
@@ -215,6 +248,12 @@ Bookmark, gespeicherte Orte und Favoriten werden synonym verwendet. Nutzer solle
 - Werden Shortcut-Buttons auf dem Dashboard frei schwebend oder in einer Bottom-Bar umgesetzt?
 - Welche Icons repräsentieren Vibes, Sicherheit und Erreichbarkeit?
 
-## 8. Spätere Mockup-Erstellung
+## 8. Professionelle Mockup-Bilder
 
-Diese handschriftlichen Skizzen sollten später als professionelle Mock-up-Bilder erzeugt werden, sobald die UI-Struktur finaler abgestimmt ist.
+Die handschriftlichen Skizzen sollen durch professionelle Mockups ergänzt werden. Vorgesehene Dateinamen:
+
+- `place2be Dashboard Mockup 13.07.26.png`
+- `place2be Detail-Ansicht Mockup 13.07.26.png`
+- `place2be Nutzerprofil Mockup 13.07.26.png`
+
+Die Platzhalter oben sind als relative Bildverweise angelegt. Sobald die Dateien im selben Ordner wie diese Markdown-Datei liegen, sollten sie automatisch angezeigt werden.
