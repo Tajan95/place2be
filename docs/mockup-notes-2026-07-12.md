@@ -69,6 +69,8 @@ Aktuelle Tendenz: absoluter Score. Gleichzeitig muss verhindert werden, dass Nut
 
 ## 3. Dashboard / MapScreen
 
+<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56 1" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" />
+
 ### Default-Zustand ohne ausgewählten Ort
 
 Nach dem Onboarding startet die App auf einer Kartenansicht. Wenn kein Ort ausgewählt ist, erscheinen unten feste Shortcut-Buttons oder eine Bottom-Bar mit Schnellzugriffen.
