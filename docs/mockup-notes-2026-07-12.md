@@ -124,6 +124,8 @@ Wenn der Nutzer Shortcuts wie „beliebte Orte in deiner Nähe“ oder „Orte n
 
 ## 4. Detailansicht eines Ortes
 
+<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56 2" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" />
+
 ### Geplante Elemente
 
 Die Detailansicht enthält:
