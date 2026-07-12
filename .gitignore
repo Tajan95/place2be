@@ -1,3 +1,18 @@
 local.properties
 .idea/
 .gradle/
+.kotlin/
+
+# Gradle and Android build output (root project and all modules)
+build/
+**/build/
+
+# Android Studio and native build caches
+*.iml
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db

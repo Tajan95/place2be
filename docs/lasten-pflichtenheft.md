@@ -69,7 +69,7 @@ Die App wird in einfache Schichten gegliedert:
 
 #### Place
 
-- `id`: eindeutige ID
+- `uuid`: eindeutige UUID
 - `name`: Name des Ortes
 - `category`: Kategorie, z. B. Park, Platz, Promenade, Einkaufsmeile
 - `description`: kurze Beschreibung
@@ -79,8 +79,9 @@ Die App wird in einfache Schichten gegliedert:
 
 #### Review
 
-- `id`: eindeutige ID
-- `placeId`: Zuordnung zum Ort
+- `uuid`: eindeutige UUID
+- `placeUuid`: Zuordnung zum Ort über dessen UUID
+- `userUuid`: Zuordnung zur bewertenden Person über deren UUID
 - `atmosphereRating`: Bewertung der Atmosphäre
 - `safetyRating`: Bewertung der Sicherheit
 - `qualityRating`: Bewertung der Aufenthaltsqualität
