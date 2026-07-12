@@ -23,6 +23,8 @@ Zusätzlich werden mehrere Querschnittskonzepte sichtbar:
 
 ## 2. Profil-/Nutzerseite
 
+<img width="1200" height="1600" alt="WhatsApp Image 2026-07-12 at 20 49 56" src="https://github.com/user-attachments/assets/e5321a19-acc1-4bec-8910-b0009d86bd53" />
+
 ### Geplante Inhalte
 
 Die Profilseite zeigt grundsätzlich:
