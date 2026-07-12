@@ -19,23 +19,27 @@ Im MVP konzentriert sich place2be auf:
 - Onboarding beim ersten Start mit später erneut aufrufbaren Hilfs-/Hinweisfunktionen
 - Start auf einer Map-Ansicht nach abgeschlossenem Onboarding
 - Mock-Map statt echter Live-Kartenintegration
-- Anzeige öffentlicher, primär kostenlos nutzbarer Orte
-- Detailansicht eines ausgewählten Ortes
+- Default-Map mit Schnellzugriffen wie Kategorien, beliebte Orte in der Nähe und gespeicherte Orte
+- auswählbare Orte auf der Map mit Mini-Preview bzw. Schnellübersichtsleiste
+- erweiterbare Detailansicht über der Karte, damit die App-Navigation räumlich zusammenhängend wirkt
+- Detailansicht eines ausgewählten Ortes mit Bild, Adresse, Bookmark und aggregierten Kriterienwerten
 - kurze Bewertung über die drei Kriterien **Vibes**, **Sicherheit** und **Erreichbarkeit**
+- optionale bzw. ergänzende Textrezensionen als MVP-Bestandteil
 - dynamischer Score durch Community-Feedback
 - stärkere Gewichtung aktueller Bewertungen gegenüber älteren Bewertungen
+- Likes/Dislikes auf Reviews, mindestens zunächst über Mock-Daten
+- Profilseite mit Nutzer-Score als Aktivitäts- und Reputationssignal
 - Tags/Ortseigenschaften wie Sitzmöglichkeiten, Schatten, Barrierefreiheit oder öffentliche Toiletten
 - lokale/prototypische Datenhaltung mit sauberer Architektur für spätere Backend-Anbindung
-- Standortberechtigungen bzw. Standortbestätigung werden fachlich berücksichtigt, echte Prüfung kann im MVP vereinfacht oder simuliert sein
+- Standortberechtigungen bzw. Standortbestätigung werden fachlich berücksichtigt; Bewerten ist nur vor Ort möglich oder im MVP entsprechend simuliert
 
 ## Nice-to-have / spätere Erweiterungen
 
 - echte GPS-basierte Standortprüfung
 - echte Kartenintegration
-- Filteransicht nach Tags
-- Nutzerprofil
-- Einstellungen
-- Punkte als Gamification-Anreiz für abgegebene Bewertungen
+- komplexere Filteransicht nach Tags
+- Einstellungen im Nutzerprofil
+- ausgefeilte Normalisierung des Nutzer-Scores gegen Score-Farming
 - Ranglisten oder Vergleich mit Kontakten
 - neue Orte vorschlagen
 - zentrale Datenbank / Backend / Firebase / REST-API
@@ -51,11 +55,17 @@ Die Nutzerbewertung erfolgt über drei Kriterien:
 
 Diese Bewertungskriterien sind von Tags/Ortseigenschaften getrennt. Tags beschreiben objektivere Merkmale eines Ortes, während die Bewertung den aktuellen subjektiven Eindruck der Community abbildet.
 
-## Ranking-System
+## Ranking- und Reputationssystem
 
 Das Ranking eines Ortes basiert auf dem Feedback der Community. Positive Bewertungen lassen einen Ort steigen, negative Rückmeldungen können ihn sinken lassen. Aspekte wie Vibes, Sicherheit und Erreichbarkeit fließen in die Bewertung ein.
 
 Damit das Ranking aktuell bleibt, wird das Bewertungsalter berücksichtigt: Neuere Bewertungen zählen stärker als ältere Bewertungen. Dadurch können Orte, die sich verschlechtern, im Ranking fallen, während ehemals schlecht bewertete Orte durch neue positive Rückmeldungen wieder steigen können.
+
+Zusätzlich soll ein Nutzer-Score Aktivität und Reputation abbilden. Punkte können z. B. durch Bewertungen, Textrezensionen und Likes auf eigene Rezensionen entstehen. Die genaue Normalisierung ist noch offen, damit stark frequentierte Orte nicht zu einfach für Score-Farming genutzt werden können.
+
+## Datenschutz-Hinweis zum Profil
+
+Die Profilseite ist MVP-relevant. Offen ist noch, wie viel der eigenen Bewertungs-Historie öffentlich sichtbar sein soll. Eine öffentliche vollständige Historie kann Rückschlüsse auf Identität oder Bewegungsmuster erlauben. Deshalb wird geprüft, ob andere Nutzer nur eine anonymisierte Profilansicht mit aggregierten Werten sehen sollen.
 
 ## Architektur
 
@@ -88,6 +98,7 @@ Weitere Projektdokumentation befindet sich im Ordner [`docs`](docs/):
 - [`docs/architekturentscheidungen.md`](docs/architekturentscheidungen.md)
 - [`docs/lasten-pflichtenheft.md`](docs/lasten-pflichtenheft.md)
 - [`docs/meeting-notes-2026-07-12.md`](docs/meeting-notes-2026-07-12.md)
+- [`docs/mockup-notes-2026-07-12.md`](docs/mockup-notes-2026-07-12.md)
 - [`docs/projektstruktur.md`](docs/projektstruktur.md)
 
 ## Ziel
