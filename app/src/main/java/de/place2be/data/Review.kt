@@ -11,6 +11,7 @@ data class Review(
     val vibe: Int,
     val timestamp: Long,
     val likes: Int,
+    val dislikes: Int,
 ) {
     val score: Double
         get() = (safety + accessibility + vibe) / NUMBER_OF_RATING_CRITERIA
