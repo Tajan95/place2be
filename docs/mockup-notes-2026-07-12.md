@@ -26,16 +26,13 @@ Zusätzlich werden mehrere Querschnittskonzepte sichtbar:
 <table>
   <tr>
     <th>Handschriftliche Skizze</th>
-    <th>Professionelles Mockup (Platzhalter)</th>
+    <th>Professionelles Mockup</th>
   </tr>
   <tr>
-    <td><img width="600" height="800" alt="Handschriftliche Profil-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/e5321a19-acc1-4bec-8910-b0009d86bd53" /></td>
-    <td><img width="600" alt="Platzhalter: place2be Nutzerprofil Mockup 13.07.26.png" src="<img width="941" height="1672" alt="place2be Nutzerprofil Mockup 13 07 26" src="https://github.com/user-attachments/assets/e57d157e-4d0a-417b-b31a-d4b78e4cf007" />
-" /></td>
+    <td><img width="500" alt="Handschriftliche Profil-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/e5321a19-acc1-4bec-8910-b0009d86bd53" /></td>
+    <td><img width="500" alt="place2be Nutzerprofil Mockup 13.07.26" src="https://github.com/user-attachments/assets/e57d157e-4d0a-417b-b31a-d4b78e4cf007" /><br><sub>Dateiname/Referenz: <code>place2be Nutzerprofil Mockup 13.07.26.png</code></sub></td>
   </tr>
 </table>
-
-> Platzhalter-Datei: `place2be Nutzerprofil Mockup 13.07.26.png`
 
 ### Geplante Inhalte
 
@@ -86,15 +83,13 @@ Aktuelle Tendenz: absoluter Score. Gleichzeitig muss verhindert werden, dass Nut
 <table>
   <tr>
     <th>Handschriftliche Skizze</th>
-    <th>Professionelles Mockup (Platzhalter)</th>
+    <th>Professionelles Mockup</th>
   </tr>
   <tr>
-    <td><img width="600" height="800" alt="Handschriftliche Dashboard-/MapScreen-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" /></td>
-    <td><img width="600" alt="Platzhalter: place2be Dashboard Mockup 13.07.26.png" src="./place2be%20Dashboard%20Mockup%2013.07.26.png" /></td>
+    <td><img width="500" alt="Handschriftliche Dashboard-/MapScreen-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/a58e417c-6cb9-4273-8fc8-9c349d55fd7f" /></td>
+    <td><img width="500" alt="place2be Dashboard Mockup 13.07.26" src="./place2be%20Dashboard%20Mockup%2013.07.26.png" /><br><sub>Platzhalter: <code>place2be Dashboard Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
   </tr>
 </table>
-
-> Platzhalter-Datei: `place2be Dashboard Mockup 13.07.26.png`
 
 ### Default-Zustand ohne ausgewählten Ort
 
@@ -152,15 +147,13 @@ Wenn der Nutzer Shortcuts wie „beliebte Orte in deiner Nähe“ oder „Orte n
 <table>
   <tr>
     <th>Handschriftliche Skizze</th>
-    <th>Professionelles Mockup (Platzhalter)</th>
+    <th>Professionelles Mockup</th>
   </tr>
   <tr>
-    <td><img width="600" height="800" alt="Handschriftliche Detailansicht-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" /></td>
-    <td><img width="600" alt="Platzhalter: place2be Detail-Ansicht Mockup 13.07.26.png" src="./place2be%20Detail-Ansicht%20Mockup%2013.07.26.png" /></td>
+    <td><img width="500" alt="Handschriftliche Detailansicht-Skizze vom 12.07.2026" src="https://github.com/user-attachments/assets/899d9a6e-fa8e-4981-9180-d7967f2c60a4" /></td>
+    <td><img width="500" alt="place2be Detail-Ansicht Mockup 13.07.26" src="./place2be%20Detail-Ansicht%20Mockup%2013.07.26.png" /><br><sub>Platzhalter: <code>place2be Detail-Ansicht Mockup 13.07.26.png</code> im Ordner <code>docs/</code> ablegen.</sub></td>
   </tr>
 </table>
-
-> Platzhalter-Datei: `place2be Detail-Ansicht Mockup 13.07.26.png`
 
 ### Geplante Elemente
 
@@ -251,10 +244,8 @@ Bookmark, gespeicherte Orte und Favoriten werden synonym verwendet. Nutzer solle
 
 ## 8. Professionelle Mockup-Bilder
 
-Die handschriftlichen Skizzen sollen durch professionelle Mockups ergänzt werden. Vorgesehene Dateinamen:
+Die professionellen Mockups können unter den folgenden Dateinamen im Ordner `docs/` abgelegt werden. Die Verweise in den Tabellen oben sind bereits vorbereitet:
 
 - `place2be Dashboard Mockup 13.07.26.png`
 - `place2be Detail-Ansicht Mockup 13.07.26.png`
 - `place2be Nutzerprofil Mockup 13.07.26.png`
-
-Die Platzhalter oben sind als relative Bildverweise angelegt. Sobald die Dateien im selben Ordner wie diese Markdown-Datei liegen, sollten sie automatisch angezeigt werden.
