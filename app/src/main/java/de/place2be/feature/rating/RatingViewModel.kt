@@ -1,12 +1,11 @@
 package de.place2be.feature.rating
 
-import de.place2be.data.repository.InMemoryPlaceRepository
 import de.place2be.domain.model.Review
 import de.place2be.domain.repository.PlaceRepository
 import java.util.UUID
 
 class RatingViewModel(
-    private val placeRepository: PlaceRepository = InMemoryPlaceRepository(),
+    private val placeRepository: PlaceRepository,
 ) {
     fun submitRating(
         placeUuid: UUID,

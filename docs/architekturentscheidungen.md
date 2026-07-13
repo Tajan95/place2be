@@ -30,11 +30,11 @@ Für das visuelle Design wird Material 3 verwendet. Das reduziert Designaufwand 
 
 **Status:** vorläufige Empfehlung
 
-Der MVP wird zunächst lokal bzw. prototypisch umgesetzt. Orte, Bewertungen, Textrezensionen, Bookmarks und Nutzer-Score können über Mock-Daten, In-Memory-Repositories oder später eine lokale Persistenz verwaltet werden. Die Architektur soll jedoch so getrennt werden, dass eine spätere Backend-, Firebase- oder REST-Anbindung möglich bleibt.
+Der MVP wird lokal mit JSON-Mock-Daten umgesetzt. Orte, Bewertungen, Textrezensionen, Bookmarks und Nutzer werden als Seed-Dateien ausgeliefert und beim ersten Start in den internen App-Speicher kopiert. Eine zentrale Mock-Datenquelle kapselt dort sämtliche CRUD-Operationen. Die Architektur bleibt so getrennt, dass später eine Backend-, Firebase- oder REST-Anbindung möglich ist.
 
 **Begründung:** Ein echtes Backend mit Nutzerkonten, zentraler Datenbank, Manipulationsschutz und Synchronisation erhöht den Aufwand stark. Für den aktuellen Projektumfang ist eine stabile, erklärbare und demo-fähige App wichtiger.
 
-**Konsequenz:** Die UI greift nicht direkt auf hart codierte Daten zu, sondern über eine Repository-Schicht. Eine spätere Remote-Datenquelle kann dort ergänzt werden.
+**Konsequenz:** Die UI greift über Repository-Interfaces auf eine gemeinsame `MockPlaceDataSource` zu. Assets werden nie direkt verändert; Schreiboperationen betreffen ausschließlich die internen Arbeitskopien der JSON-Dateien. Eine spätere Remote-Datenquelle kann hinter denselben Interfaces ergänzt werden.
 
 ## ADR-005: Standortbestätigung zunächst simuliert oder vereinfacht
 
