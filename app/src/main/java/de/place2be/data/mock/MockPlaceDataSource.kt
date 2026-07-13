@@ -1,9 +1,11 @@
 package de.place2be.data.mock
 
+import de.place2be.domain.model.Bookmark
 import de.place2be.domain.model.Place
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.model.PlaceCategory
 import de.place2be.domain.model.Review
+import de.place2be.domain.model.User
 import java.util.UUID
 
 /**
@@ -15,6 +17,14 @@ import java.util.UUID
  */
 class MockPlaceDataSource {
     private val demoUserUuid = UUID.fromString("aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa")
+
+    val users: List<User> = listOf(
+        User(
+            uuid = demoUserUuid,
+            displayName = "MainEntdecker",
+            userScore = 128,
+        ),
+    )
 
     val places: List<Place> = listOf(
         Place(
@@ -101,6 +111,7 @@ class MockPlaceDataSource {
             safety = 4,
             accessibility = 5,
             timestampMillis = daysAgo(1),
+            text = "Schöner Blick auf den Main und eine entspannte Stimmung.",
             likes = 2,
             dislikes = 0,
         ),
@@ -121,8 +132,22 @@ class MockPlaceDataSource {
             safety = 4,
             accessibility = 3,
             timestampMillis = daysAgo(7),
+            text = "Ruhig, grün und mit ausreichend Sitzmöglichkeiten.",
             likes = 0,
             dislikes = 0,
+        ),
+    )
+
+    val bookmarks: List<Bookmark> = listOf(
+        Bookmark(
+            userUuid = demoUserUuid,
+            placeUuid = places[0].uuid,
+            createdAtMillis = daysAgo(2),
+        ),
+        Bookmark(
+            userUuid = demoUserUuid,
+            placeUuid = places[4].uuid,
+            createdAtMillis = daysAgo(5),
         ),
     )
 

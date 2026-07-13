@@ -14,6 +14,7 @@ class RatingViewModel(
         vibe: Int,
         safety: Int,
         accessibility: Int,
+        text: String? = null,
     ) {
         val review = Review(
             placeUuid = placeUuid,
@@ -22,6 +23,7 @@ class RatingViewModel(
             safety = safety,
             accessibility = accessibility,
             timestampMillis = System.currentTimeMillis(),
+            text = text,
         )
         placeRepository.addReview(review)
     }

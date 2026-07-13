@@ -11,10 +11,12 @@ import java.util.UUID
 data class User(
     val uuid: UUID = UUID.randomUUID(),
     val displayName: String,
+    val userScore: Int = 0,
 ) {
     init {
         require(uuid.version() == RANDOM_UUID_VERSION) { "User UUID must be a random UUID (version 4)." }
         require(displayName.isNotBlank()) { "Display name must not be blank." }
+        require(userScore >= 0) { "User score must not be negative." }
     }
 
     private companion object {

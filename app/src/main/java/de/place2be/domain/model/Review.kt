@@ -16,6 +16,7 @@ data class Review(
     val safety: Int,
     val accessibility: Int,
     val timestampMillis: Long,
+    val text: String? = null,
     val likes: Int = 0,
     val dislikes: Int = 0,
 ) {
@@ -30,6 +31,7 @@ data class Review(
         require(safety in RATING_RANGE) { "Safety must be rated from 1 to 5." }
         require(accessibility in RATING_RANGE) { "Accessibility must be rated from 1 to 5." }
         require(timestampMillis >= 0) { "Timestamp must not be negative." }
+        require(text == null || text.isNotBlank()) { "Review text must not be blank." }
         require(likes >= 0) { "Likes must not be negative." }
         require(dislikes >= 0) { "Dislikes must not be negative." }
     }

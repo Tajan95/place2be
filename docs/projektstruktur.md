@@ -24,16 +24,19 @@ de.place2be
 │   ├── mock
 │   │   └── MockPlaceDataSource.kt
 │   └── repository
-│       └── InMemoryPlaceRepository.kt
+│       ├── InMemoryPlaceRepository.kt
+│       └── InMemoryUserRepository.kt
 ├── domain
 │   ├── model
 │   │   ├── Place.kt
+│   │   ├── Bookmark.kt
 │   │   ├── PlaceAttribute.kt
 │   │   ├── PlaceCategory.kt
 │   │   ├── Review.kt
 │   │   └── User.kt
 │   ├── repository
-│   │   └── PlaceRepository.kt
+│   │   ├── PlaceRepository.kt
+│   │   └── UserRepository.kt
 │   └── usecase
 │       └── CalculatePlaceScoreUseCase.kt
 ├── feature
