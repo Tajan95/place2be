@@ -14,7 +14,7 @@ class RatingViewModel(
         safety: Int,
         accessibility: Int,
         text: String? = null,
-    ) {
+    ): Review {
         val review = Review(
             placeUuid = placeUuid,
             userUuid = userUuid,
@@ -22,9 +22,10 @@ class RatingViewModel(
             safety = safety,
             accessibility = accessibility,
             timestampMillis = System.currentTimeMillis(),
-            text = text,
+            text = text?.trim()?.takeIf(String::isNotEmpty),
         )
         placeRepository.addReview(review)
+        return review
     }
 }
 
@@ -32,8 +33,17 @@ data class RatingUiState(
     val vibe: Int = DEFAULT_RATING,
     val safety: Int = DEFAULT_RATING,
     val accessibility: Int = DEFAULT_RATING,
+    val reviewText: String = "",
 ) {
+    val isSubmitEnabled: Boolean
+        get() = vibe in RATING_RANGE &&
+            safety in RATING_RANGE &&
+            accessibility in RATING_RANGE &&
+            reviewText.length <= MAX_REVIEW_TEXT_LENGTH
+
     companion object {
         const val DEFAULT_RATING = 3
+        const val MAX_REVIEW_TEXT_LENGTH = 300
+        val RATING_RANGE = 1..5
     }
 }
