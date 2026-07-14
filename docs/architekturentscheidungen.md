@@ -74,7 +74,7 @@ Die Bewertung ist im regulären App-Flow **keine separate Vollbildseite**. Im ko
 
 **Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen. Der zusammenhängende Bottom-Sheet-Flow erhält außerdem die visuelle Kontinuität zwischen Kartenauswahl, Detailansicht und Bewertung und verhindert konkurrierende Buttons mit ähnlicher Bedeutung.
 
-**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann. Das Bottom-Sheet trägt die Verantwortung für Peek-, Detail-, Bewertungs- und Review-Zustand.
+**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann. Das Bottom-Sheet trägt die Verantwortung für Peek-, Detail-, Bewertungs- und Review-Zustand. Wenn die Detailansicht wieder auf den Peek-Zustand verkleinert wird, springt ihr interner Scrollzustand auf den Anfang zurück, damit erneut die kompakte Ortsvorschau sichtbar ist.
 
 ## ADR-009: Profil, Nutzer-Score und Review-Reaktionen als MVP-nahe Bestandteile
 
@@ -100,6 +100,26 @@ Die eigene Bewertungs-Historie kann für den Nutzer selbst hilfreich sein. Eine 
 
 Nach dem Speichern einer Bewertung soll die Repository-Schicht erneut gelesen werden. Eine eingegebene Textrezension erscheint dadurch unmittelbar im Review-Bereich desselben Ortes. Der Bereich liegt unterhalb des Bewertungsformulars im erweiterten Bottom-Sheet.
 
-Mindestens die Sortierungen **Rezent** und **Beliebt** werden sichtbar vorbereitet. „Rezent“ sortiert nach Zeitstempel; „Beliebt“ orientiert sich zunächst an Likes abzüglich Dislikes. Die eigentliche Reaktionsinteraktion kann im zugehörigen Folgeissue weiter ausgebaut werden.
+Mindestens die Sortierungen **Rezent** und **Beliebt** werden sichtbar angeboten. „Rezent“ sortiert absteigend nach Zeitstempel. „Beliebt“ verwendet vorläufig die Netto-Reaktionen `likes - dislikes` und eine logarithmisch wachsende Altersstrafe. Die Strafe ist anfangs deutlich und flacht mit zunehmendem Alter ab. So können aktuelle populäre Meinungen aufsteigen, ohne dass ältere hilfreiche Rezensionen zwangsläufig vollständig bedeutungslos werden.
 
 **Konsequenz:** Issue #6 verantwortet Eingabe, Speicherung und unmittelbar sichtbare Rückmeldung. Ausklappbare Review-Texte, Reaktionsinteraktionen und weiterführende Filter bleiben mit den Issues #18 und #19 abgestimmt.
+
+## ADR-012: Eine Bewertung pro Nutzer, Ort und 24-Stunden-Zeitraum
+
+**Status:** entschieden für MVP
+
+Nach einer abgegebenen Bewertung darf derselbe Nutzer denselben Ort erst 24 Stunden später erneut bewerten. Die Sperre gilt sowohl für reine Zahlenbewertungen als auch für Bewertungen mit Textrezension.
+
+**Begründung:** Ohne Sperrfrist könnten einzelne Nutzer den Orts-Score durch viele unmittelbar aufeinanderfolgende Bewertungen manipulieren. Die Regel begrenzt Spam, ohne regelmäßige neue Eindrücke grundsätzlich auszuschließen.
+
+**Konsequenz:** Die Regel liegt als `ReviewSubmissionCooldownPolicy` in der Domain-Schicht. Während der Sperrfrist werden Slider und Textfeld deaktiviert. Der Speichern-Button ist nicht klickbar, zeigt die verbleibende Zeit an und verwendet zur freundlichen Kennzeichnung einen Curry-/Goldton.
+
+## ADR-013: Textrezensionslisten sind auf 50 Einträge begrenzt
+
+**Status:** Anzeige entschieden, persistente Bereinigung noch umzusetzen
+
+Sowohl „Rezent“ als auch „Beliebt“ zeigen pro Ort höchstens 50 Textrezensionen. Dadurch bleibt die Detailansicht bei stark frequentierten Orten performant und übersichtlich.
+
+Für „Rezent“ werden die 50 neuesten Texte angezeigt. Für „Beliebt“ werden die 50 höchsten zeitabhängigen Popularitätswerte angezeigt. Sobald die persistente Bereinigung umgesetzt wird, darf bei verdrängten Einträgen ausschließlich der Rezensionstext entfernt werden. Die numerischen Werte für Vibes, Sicherheit und Erreichbarkeit sowie der Zeitstempel bleiben erhalten und fließen weiterhin in den zeitlich gewichteten Orts-Score ein.
+
+**Konsequenz:** Die UI begrenzt die sichtbaren Listen bereits auf 50 Einträge. Das tatsächliche Entfernen verdrängter Texte aus der lokalen Datenhaltung wird in Issue #18 separat umgesetzt, damit keine numerischen Bewertungsdaten verloren gehen.
