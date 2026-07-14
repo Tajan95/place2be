@@ -57,7 +57,7 @@ fun MapScreenWithRatingEntry(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, bottom = 22.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 22.dp),
             )
         }
     }
@@ -94,7 +94,7 @@ private fun RatingEntryOverlay(
                 text = place.ratingEligibilityMessage,
                 color = DarkInk.copy(alpha = 0.72f),
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 13.dp),
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 13.dp, bottom = 13.dp),
             )
         }
     }
