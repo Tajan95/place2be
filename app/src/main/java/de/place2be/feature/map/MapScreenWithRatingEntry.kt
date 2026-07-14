@@ -1,5 +1,6 @@
 package de.place2be.feature.map
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,6 +59,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import kotlin.math.ceil
+import kotlin.math.ln
 
 /**
  * Integrationsschicht für die zusammenhängende Map-/Detail-/Bewertungs-UX.
@@ -73,6 +77,8 @@ fun MapScreenWithRatingEntry(
     selectedPlaceUuid: UUID?,
     reviewsForSelectedPlace: List<Review>,
     reviewAuthorNames: Map<UUID, String>,
+    currentUserUuid: UUID,
+    ratingCooldownRemainingMillis: Long,
     onPlaceSelected: (UUID) -> Unit,
     onSelectionCleared: () -> Unit,
     onSubmitRating: (
@@ -90,9 +96,19 @@ fun MapScreenWithRatingEntry(
         skipHiddenState = true,
     )
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    val detailScrollState = rememberScrollState()
 
     LaunchedEffect(selectedPlaceUuid) {
+        detailScrollState.scrollTo(0)
         if (selectedPlaceUuid != null) sheetState.partialExpand()
+    }
+
+    // Nach dem Zurückschieben in den Peek-Zustand soll wieder der Kopfbereich
+    // sichtbar sein – nicht die zuletzt gelesene Rezension weiter unten.
+    LaunchedEffect(sheetState.currentValue, selectedPlaceUuid) {
+        if (selectedPlaceUuid != null && sheetState.currentValue == SheetValue.PartiallyExpanded) {
+            detailScrollState.scrollTo(0)
+        }
     }
 
     BottomSheetScaffold(
@@ -117,6 +133,9 @@ fun MapScreenWithRatingEntry(
                     place = selectedPlace,
                     reviews = reviewsForSelectedPlace,
                     reviewAuthorNames = reviewAuthorNames,
+                    currentUserUuid = currentUserUuid,
+                    cooldownRemainingMillis = ratingCooldownRemainingMillis,
+                    scrollState = detailScrollState,
                     onClose = onSelectionCleared,
                     onSubmitRating = onSubmitRating,
                 )
@@ -141,6 +160,9 @@ private fun InlinePlaceDetailSheet(
     place: MapPlaceUiState,
     reviews: List<Review>,
     reviewAuthorNames: Map<UUID, String>,
+    currentUserUuid: UUID,
+    cooldownRemainingMillis: Long,
+    scrollState: ScrollState,
     onClose: () -> Unit,
     onSubmitRating: (UUID, Int, Int, Int, String?) -> Unit,
     modifier: Modifier = Modifier,
@@ -152,19 +174,24 @@ private fun InlinePlaceDetailSheet(
     var textReviewExpanded by rememberSaveable(place.uuid.toString()) { mutableStateOf(false) }
     var reviewSortName by rememberSaveable(place.uuid.toString()) { mutableStateOf(ReviewSort.RECENT.name) }
     var saveConfirmationVisible by remember(place.uuid) { mutableStateOf(false) }
+
     val reviewSort = ReviewSort.valueOf(reviewSortName)
-    val visibleReviews = remember(reviews, reviewSort) {
+    val cooldownActive = place.canRate && cooldownRemainingMillis > 0L
+    val canSubmitRating = place.canRate && !cooldownActive
+    val nowMillis = remember(reviews, reviewSort) { System.currentTimeMillis() }
+    val visibleReviews = remember(reviews, reviewSort, nowMillis) {
         reviews
             .filter { !it.text.isNullOrBlank() }
             .let { textReviews ->
                 when (reviewSort) {
                     ReviewSort.RECENT -> textReviews.sortedByDescending(Review::timestampMillis)
                     ReviewSort.POPULAR -> textReviews.sortedWith(
-                        compareByDescending<Review> { it.likes - it.dislikes }
+                        compareByDescending<Review> { reviewPopularityScore(it, nowMillis) }
                             .thenByDescending(Review::timestampMillis),
                     )
                 }
             }
+            .take(MAX_VISIBLE_TEXT_REVIEWS)
     }
 
     Column(
@@ -172,7 +199,7 @@ private fun InlinePlaceDetailSheet(
             .fillMaxWidth()
             .height(PLACE_DETAIL_EXPANDED_HEIGHT)
             .navigationBarsPadding()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -192,12 +219,12 @@ private fun InlinePlaceDetailSheet(
         AggregatedRatings(place)
         Spacer(Modifier.height(10.dp))
         Text(
-            text = if (place.canRate) {
-                "Nach oben ziehen und direkt vor Ort bewerten"
-            } else {
-                place.ratingEligibilityMessage
+            text = when {
+                !place.canRate -> place.ratingEligibilityMessage
+                cooldownActive -> "Du hast diesen Ort heute bereits bewertet"
+                else -> "Nach oben ziehen und direkt vor Ort bewerten"
             },
-            color = if (place.canRate) LeafAccent else DarkInk.copy(alpha = 0.62f),
+            color = if (place.canRate && !cooldownActive) LeafAccent else DarkInk.copy(alpha = 0.62f),
             fontSize = 11.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
@@ -217,6 +244,15 @@ private fun InlinePlaceDetailSheet(
             color = DarkInk.copy(alpha = 0.68f),
             fontSize = 12.sp,
         )
+        if (cooldownActive) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Eine neue Bewertung ist in ${formatCooldownRemaining(cooldownRemainingMillis)} möglich.",
+                color = AccessibilityGold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
         Spacer(Modifier.height(14.dp))
 
         InlineRatingSlider(
@@ -224,7 +260,7 @@ private fun InlinePlaceDetailSheet(
             criterion = RatingCriterion.VIBE,
             value = vibe,
             color = LeafAccent,
-            enabled = place.canRate,
+            enabled = canSubmitRating,
             onValueChanged = { vibe = it },
         )
         InlineRatingSlider(
@@ -232,7 +268,7 @@ private fun InlinePlaceDetailSheet(
             criterion = RatingCriterion.SAFETY,
             value = safety,
             color = SafetyBlue,
-            enabled = place.canRate,
+            enabled = canSubmitRating,
             onValueChanged = { safety = it },
         )
         InlineRatingSlider(
@@ -240,7 +276,7 @@ private fun InlinePlaceDetailSheet(
             criterion = RatingCriterion.ACCESSIBILITY,
             value = accessibility,
             color = AccessibilityGold,
-            enabled = place.canRate,
+            enabled = canSubmitRating,
             onValueChanged = { accessibility = it },
         )
 
@@ -248,24 +284,32 @@ private fun InlinePlaceDetailSheet(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = place.canRate) {
+                .clickable(enabled = canSubmitRating) {
                     textReviewExpanded = !textReviewExpanded
                 },
             shape = RoundedCornerShape(15.dp),
-            color = LeafSurface.copy(alpha = 0.65f),
+            color = if (canSubmitRating) LeafSurface.copy(alpha = 0.65f) else DisabledSurface,
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = if (textReviewExpanded) "Textrezension ausblenden" else "Textrezension hinzufügen (optional)",
-                    color = DarkInk,
+                    text = if (textReviewExpanded) {
+                        "Textrezension ausblenden"
+                    } else {
+                        "Textrezension hinzufügen (optional)"
+                    },
+                    color = DarkInk.copy(alpha = if (canSubmitRating) 1f else 0.55f),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
-                Text(if (textReviewExpanded) "⌃" else "⌄", color = Moss, fontSize = 18.sp)
+                Text(
+                    text = if (textReviewExpanded) "⌃" else "⌄",
+                    color = if (canSubmitRating) Moss else DarkInk.copy(alpha = 0.4f),
+                    fontSize = 18.sp,
+                )
             }
         }
 
@@ -277,7 +321,7 @@ private fun InlinePlaceDetailSheet(
                     if (newText.length <= RatingUiState.MAX_REVIEW_TEXT_LENGTH) reviewText = newText
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = place.canRate,
+                enabled = canSubmitRating,
                 label = { Text("Kurze Rezension") },
                 placeholder = { Text("Was sollten andere über diesen Ort wissen?") },
                 supportingText = {
@@ -302,19 +346,27 @@ private fun InlinePlaceDetailSheet(
                 textReviewExpanded = false
                 saveConfirmationVisible = true
             },
-            enabled = place.canRate,
+            enabled = canSubmitRating,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(46.dp),
             shape = RoundedCornerShape(15.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Moss,
-                disabledContainerColor = DisabledSurface,
-                disabledContentColor = DarkInk.copy(alpha = 0.48f),
+                disabledContainerColor = if (cooldownActive) {
+                    AccessibilityGold.copy(alpha = 0.78f)
+                } else {
+                    DisabledSurface
+                },
+                disabledContentColor = if (cooldownActive) DarkInk else DarkInk.copy(alpha = 0.48f),
             ),
         ) {
             Text(
-                text = if (place.canRate) "Bewertung speichern" else "Bewerten · nur vor Ort",
+                text = when {
+                    !place.canRate -> "Bewerten · nur vor Ort"
+                    cooldownActive -> "Bewertung wieder in ${formatCooldownRemaining(cooldownRemainingMillis)} möglich"
+                    else -> "Bewertung speichern"
+                },
                 fontWeight = FontWeight.SemiBold,
             )
         }
@@ -355,7 +407,13 @@ private fun InlinePlaceDetailSheet(
                 onClick = { reviewSortName = ReviewSort.POPULAR.name },
             )
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Es werden höchstens $MAX_VISIBLE_TEXT_REVIEWS Textrezensionen angezeigt.",
+            color = DarkInk.copy(alpha = 0.5f),
+            fontSize = 10.sp,
+        )
+        Spacer(Modifier.height(10.dp))
 
         if (visibleReviews.isEmpty()) {
             Text(
@@ -368,6 +426,7 @@ private fun InlinePlaceDetailSheet(
                 ReviewCard(
                     review = review,
                     authorName = reviewAuthorNames[review.userUuid] ?: "Community-Mitglied",
+                    isOwnReview = review.userUuid == currentUserUuid,
                 )
                 Spacer(Modifier.height(10.dp))
             }
@@ -465,7 +524,7 @@ private fun AggregatedRatingPill(
     criterion: RatingCriterion,
     label: String,
     score: Double,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -497,7 +556,7 @@ private fun InlineRatingSlider(
     label: String,
     criterion: RatingCriterion,
     value: Int,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     enabled: Boolean,
     onValueChanged: (Int) -> Unit,
 ) {
@@ -506,7 +565,7 @@ private fun InlineRatingSlider(
         Spacer(Modifier.width(8.dp))
         Text(
             text = "$label: $value",
-            color = DarkInk,
+            color = DarkInk.copy(alpha = if (enabled) 1f else 0.52f),
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
         )
@@ -573,6 +632,7 @@ private fun ReviewSortButton(
 private fun ReviewCard(
     review: Review,
     authorName: String,
+    isOwnReview: Boolean,
 ) {
     var expanded by rememberSaveable(review.uuid.toString()) { mutableStateOf(false) }
     val reviewText = review.text.orEmpty()
@@ -585,7 +645,7 @@ private fun ReviewCard(
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = authorName,
+                    text = if (isOwnReview) "$authorName · Du" else authorName,
                     color = DarkInk,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
@@ -633,6 +693,32 @@ private fun ReviewCard(
     }
 }
 
+/**
+ * Vorläufiger Popularitätswert für Textrezensionen.
+ *
+ * Netto-Reaktionen werden durch eine logarithmisch wachsende Altersstrafe
+ * geteilt. Die Strafe wächst anfangs merklich, flacht später aber ab. Dadurch
+ * können aktuelle populäre Meinungen aufsteigen, ohne dass ältere hilfreiche
+ * Rezensionen zwangsläufig vollständig bedeutungslos werden.
+ */
+private fun reviewPopularityScore(review: Review, nowMillis: Long): Double {
+    val netPositiveReactions = (review.likes - review.dislikes).coerceAtLeast(0).toDouble()
+    val ageDays = ((nowMillis - review.timestampMillis).coerceAtLeast(0L) / MILLIS_PER_DAY.toDouble())
+    val logarithmicAgePenalty = 1.0 + ln(1.0 + ageDays) / POPULARITY_AGE_PENALTY_SCALE
+    return netPositiveReactions / logarithmicAgePenalty
+}
+
+private fun formatCooldownRemaining(remainingMillis: Long): String {
+    val totalMinutes = ceil(remainingMillis.coerceAtLeast(1L) / MILLIS_PER_MINUTE.toDouble()).toLong()
+    val hours = totalMinutes / MINUTES_PER_HOUR
+    val minutes = totalMinutes % MINUTES_PER_HOUR
+    return when {
+        hours > 0 && minutes > 0 -> "$hours h $minutes min"
+        hours > 0 -> "$hours h"
+        else -> "${minutes.coerceAtLeast(1L)} min"
+    }
+}
+
 private enum class ReviewSort {
     RECENT,
     POPULAR,
@@ -640,5 +726,10 @@ private enum class ReviewSort {
 
 private val REVIEW_DATE_FORMAT = SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY)
 private const val REVIEW_COLLAPSE_HINT_LENGTH = 120
+private const val MAX_VISIBLE_TEXT_REVIEWS = 50
+private const val MILLIS_PER_MINUTE = 60_000L
+private const val MINUTES_PER_HOUR = 60L
+private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1_000L
+private const val POPULARITY_AGE_PENALTY_SCALE = 4.0
 private val PLACE_DETAIL_PEEK_HEIGHT = 270.dp
 private val PLACE_DETAIL_EXPANDED_HEIGHT = 760.dp
