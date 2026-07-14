@@ -5,7 +5,6 @@ import de.place2be.core.location.RatingEligibilityPolicy
 import de.place2be.domain.model.Place
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.model.PlaceCategory
-import de.place2be.domain.model.Review
 import de.place2be.domain.repository.PlaceRepository
 import de.place2be.domain.repository.UserRepository
 import de.place2be.domain.usecase.CalculatePlaceScoreUseCase
@@ -46,7 +45,7 @@ class MapViewModel(
         bookmarkedAtMillis: Long?,
     ): MapPlaceUiState {
         val reviews = placeRepository.getReviewsForPlace(uuid)
-        val currentScore = calculatePlaceScoreUseCase.calculate(
+        val scoreResult = calculatePlaceScoreUseCase.calculate(
             reviews = reviews,
             fallbackScore = initialScore,
         )
@@ -63,10 +62,10 @@ class MapViewModel(
             categoryLabel = category.toDisplayLabel(),
             locationHint = locationHint,
             attributes = attributes,
-            currentScore = currentScore,
-            vibeScore = reviews.averageOf(Review::vibe, currentScore),
-            safetyScore = reviews.averageOf(Review::safety, currentScore),
-            accessibilityScore = reviews.averageOf(Review::accessibility, currentScore),
+            currentScore = scoreResult.overallScore,
+            vibeScore = scoreResult.vibeScore,
+            safetyScore = scoreResult.safetyScore,
+            accessibilityScore = scoreResult.accessibilityScore,
             mapXFraction = coordinateBounds.xFraction(longitude),
             mapYFraction = coordinateBounds.yFraction(latitude),
             bookmarkedAtMillis = bookmarkedAtMillis,
@@ -74,11 +73,6 @@ class MapViewModel(
             ratingEligibilityMessage = ratingEligibility.helperText,
         )
     }
-
-    private fun List<Review>.averageOf(
-        selector: (Review) -> Int,
-        fallback: Double,
-    ): Double = if (isEmpty()) fallback else map(selector).average()
 
     private data class CoordinateBounds(
         val minLatitude: Double,
