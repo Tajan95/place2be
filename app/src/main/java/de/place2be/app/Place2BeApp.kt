@@ -11,6 +11,7 @@ import de.place2be.core.location.LocationConfirmationState
 import de.place2be.data.mock.MockPlaceDataSource
 import de.place2be.data.repository.MockPlaceRepository
 import de.place2be.data.repository.MockUserRepository
+import de.place2be.domain.model.Review
 import de.place2be.feature.map.MapScreenWithRatingEntry
 import de.place2be.feature.map.MapViewModel
 import de.place2be.feature.rating.RatingViewModel
@@ -52,10 +53,10 @@ fun Place2BeApp() {
     }
     val reviewAuthorNames = remember(selectedReviews, userRepository, dataRevision) {
         selectedReviews
-            .map(ReviewAuthorKey::from)
+            .map(Review::userUuid)
             .distinct()
-            .associate { key ->
-                key.userUuid to (userRepository.getUser(key.userUuid)?.displayName ?: "Community-Mitglied")
+            .associateWith { userUuid ->
+                userRepository.getUser(userUuid)?.displayName ?: "Community-Mitglied"
             }
     }
 
@@ -80,12 +81,6 @@ fun Place2BeApp() {
             dataRevision++
         },
     )
-}
-
-private data class ReviewAuthorKey(val userUuid: UUID) {
-    companion object {
-        fun from(review: de.place2be.domain.model.Review): ReviewAuthorKey = ReviewAuthorKey(review.userUuid)
-    }
 }
 
 private val DEMO_USER_UUID: UUID = UUID.fromString("f5257520-3685-4a1a-be5b-4a0ceb1baba7")
