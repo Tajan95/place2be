@@ -12,6 +12,7 @@ import de.place2be.data.mock.MockPlaceDataSource
 import de.place2be.data.repository.MockPlaceRepository
 import de.place2be.data.repository.MockUserRepository
 import de.place2be.domain.model.Review
+import de.place2be.domain.usecase.ReviewSubmissionCooldownPolicy
 import de.place2be.feature.map.MapScreenWithRatingEntry
 import de.place2be.feature.map.MapViewModel
 import de.place2be.feature.rating.RatingViewModel
@@ -22,9 +23,9 @@ import java.util.UUID
  *
  * Die Bewertung bleibt Teil der erweiterbaren Orts-Detailansicht über der Map.
  * Die Vor-Ort-Bedingung wird auf diesem Feature-Branch bewusst simuliert, damit
- * Slider, Textrezension, Persistenz und Score-Aktualisierung in der IDE getestet
- * werden können. Die fachliche Standort-/Mindestaufenthaltslogik bleibt in
- * core.location vorbereitet.
+ * Slider, Textrezension, Persistenz, Cooldown und Score-Aktualisierung in der IDE
+ * getestet werden können. Die fachliche Standort-/Mindestaufenthaltslogik bleibt
+ * in core.location vorbereitet.
  */
 @Composable
 fun Place2BeApp() {
@@ -33,6 +34,7 @@ fun Place2BeApp() {
     val placeRepository = remember(mockDataSource) { MockPlaceRepository(mockDataSource) }
     val userRepository = remember(mockDataSource) { MockUserRepository(mockDataSource) }
     val ratingViewModel = remember(placeRepository) { RatingViewModel(placeRepository) }
+    val cooldownPolicy = remember { ReviewSubmissionCooldownPolicy() }
 
     var dataRevision by rememberSaveable { mutableStateOf(0) }
     var selectedPlaceUuidString by rememberSaveable { mutableStateOf<String?>(null) }
@@ -59,12 +61,20 @@ fun Place2BeApp() {
                 userRepository.getUser(userUuid)?.displayName ?: "Community-Mitglied"
             }
     }
+    val submissionAvailability = remember(selectedReviews, dataRevision) {
+        cooldownPolicy.evaluate(
+            reviewsForPlace = selectedReviews,
+            userUuid = DEMO_USER_UUID,
+        )
+    }
 
     MapScreenWithRatingEntry(
         places = places,
         selectedPlaceUuid = selectedPlaceUuid,
         reviewsForSelectedPlace = selectedReviews,
         reviewAuthorNames = reviewAuthorNames,
+        currentUserUuid = DEMO_USER_UUID,
+        ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
         onPlaceSelected = { selectedPlaceUuidString = it.toString() },
         onSelectionCleared = { selectedPlaceUuidString = null },
         onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
@@ -76,8 +86,8 @@ fun Place2BeApp() {
                 accessibility = accessibility,
                 text = text,
             )
-            // Erzwingt eine neue Repository-Abfrage, damit die gespeicherte
-            // Rezension und die aktualisierten Kriterienwerte sofort erscheinen.
+            // Erzwingt eine neue Repository-Abfrage, damit Rezension, Cooldown
+            // und aktualisierte Kriterienwerte unmittelbar sichtbar werden.
             dataRevision++
         },
     )
