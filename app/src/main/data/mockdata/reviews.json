@@ -1,0 +1,38 @@
+[
+  {
+    "uuid": "ec529562-6656-4160-b027-4ca3d0947eec",
+    "placeUuid": "e31093f8-b56e-45f9-b0e3-6f93a8db517e",
+    "userUuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
+    "vibe": 5,
+    "safety": 4,
+    "accessibility": 5,
+    "timestampMillis": 1783861830000,
+    "text": "Schöner Blick auf den Main und eine entspannte Stimmung.",
+    "likes": 10,
+    "dislikes": 2
+  },
+  {
+    "uuid": "a3cd8e29-e654-46ae-95c3-d4e6616dc421",
+    "placeUuid": "e31093f8-b56e-45f9-b0e3-6f93a8db517e",
+    "userUuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
+    "vibe": 3,
+    "safety": 3,
+    "accessibility": 4,
+    "timestampMillis": 1778764230000,
+    "text": null,
+    "likes": 1,
+    "dislikes": 4
+  },
+  {
+    "uuid": "ef4df0a5-d683-47e1-9f5b-9eb493ef8c4e",
+    "placeUuid": "1cffbae7-e91c-4d1d-8212-c5f3e6b37fe6",
+    "userUuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
+    "vibe": 4,
+    "safety": 4,
+    "accessibility": 3,
+    "timestampMillis": 1783343430000,
+    "text": "Hatte hier ein wunderschönes erstes Date.",
+    "likes": 1,
+    "dislikes": 0
+  }
+]

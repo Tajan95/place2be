@@ -69,7 +69,7 @@ Die Profilseite ist MVP-relevant. Offen ist noch, wie viel der eigenen Bewertung
 
 ## Architektur
 
-Der MVP wird vorläufig **local-first** umgesetzt. Das bedeutet: Die App arbeitet zunächst mit Mock-Daten, In-Memory-Daten oder später optional lokaler Persistenz. Gleichzeitig soll die Architektur so getrennt werden, dass eine spätere reale Backend-Anbindung möglich bleibt.
+Der MVP wird **local-first** mit JSON-Mock-Daten umgesetzt. Versionierte Seed-Dateien unter `app/src/main/data/mockdata` werden beim ersten Start in den internen App-Speicher kopiert und dort über eine zentrale CRUD-Datenquelle bearbeitet. Gleichzeitig bleibt die Architektur so getrennt, dass später eine reale Backend-Anbindung möglich ist.
 
 Die App ist MVVM- und Feature-orientiert strukturiert:
 

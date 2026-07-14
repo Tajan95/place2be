@@ -24,8 +24,8 @@ de.place2be
 │   ├── mock
 │   │   └── MockPlaceDataSource.kt
 │   └── repository
-│       ├── InMemoryPlaceRepository.kt
-│       └── InMemoryUserRepository.kt
+│       ├── MockPlaceRepository.kt
+│       └── MockUserRepository.kt
 ├── domain
 │   ├── model
 │   │   ├── Place.kt
@@ -84,7 +84,7 @@ Die Score-Logik gehört bewusst nicht in die UI und auch nicht direkt in einen S
 
 ### Data-Schicht
 
-Die Data-Schicht liefert Daten für die App. Im MVP wird local-first gearbeitet. Deshalb gibt es zunächst Mock-Daten und ein In-Memory-Repository.
+Die Data-Schicht liefert Daten für die App. Im MVP wird local-first mit JSON-Dateien gearbeitet. `app/src/main/data/mockdata` enthält die versionierten Startdaten und ist als Android-Assets-Quelle registriert. `MockPlaceDataSource` kopiert sie beim ersten Start in den internen App-Speicher und zentralisiert dort CRUD für Orte, Reviews, Nutzer und Bookmarks. Die Repository-Adapter übersetzen diesen Zugriff auf die Domain-Interfaces.
 
 Später kann diese Schicht erweitert oder ersetzt werden durch:
 

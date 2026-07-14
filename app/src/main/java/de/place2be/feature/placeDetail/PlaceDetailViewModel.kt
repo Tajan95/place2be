@@ -1,13 +1,12 @@
 package de.place2be.feature.placeDetail
 
-import de.place2be.data.repository.InMemoryPlaceRepository
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.repository.PlaceRepository
 import de.place2be.domain.usecase.CalculatePlaceScoreUseCase
 import java.util.UUID
 
 class PlaceDetailViewModel(
-    private val placeRepository: PlaceRepository = InMemoryPlaceRepository(),
+    private val placeRepository: PlaceRepository,
     private val calculatePlaceScoreUseCase: CalculatePlaceScoreUseCase = CalculatePlaceScoreUseCase(),
 ) {
     fun getPlaceDetail(placeUuid: UUID): PlaceDetailUiState? {

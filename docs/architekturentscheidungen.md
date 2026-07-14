@@ -30,21 +30,21 @@ Für das visuelle Design wird Material 3 verwendet. Das reduziert Designaufwand 
 
 **Status:** vorläufige Empfehlung
 
-Der MVP wird zunächst lokal bzw. prototypisch umgesetzt. Orte, Bewertungen, Textrezensionen, Bookmarks und Nutzer-Score können über Mock-Daten, In-Memory-Repositories oder später eine lokale Persistenz verwaltet werden. Die Architektur soll jedoch so getrennt werden, dass eine spätere Backend-, Firebase- oder REST-Anbindung möglich bleibt.
+Der MVP wird lokal mit JSON-Mock-Daten umgesetzt. Orte, Bewertungen, Textrezensionen, Bookmarks und Nutzer werden als Seed-Dateien ausgeliefert und beim ersten Start in den internen App-Speicher kopiert. Eine zentrale Mock-Datenquelle kapselt dort sämtliche CRUD-Operationen. Die Architektur bleibt so getrennt, dass später eine Backend-, Firebase- oder REST-Anbindung möglich ist.
 
 **Begründung:** Ein echtes Backend mit Nutzerkonten, zentraler Datenbank, Manipulationsschutz und Synchronisation erhöht den Aufwand stark. Für den aktuellen Projektumfang ist eine stabile, erklärbare und demo-fähige App wichtiger.
 
-**Konsequenz:** Die UI greift nicht direkt auf hart codierte Daten zu, sondern über eine Repository-Schicht. Eine spätere Remote-Datenquelle kann dort ergänzt werden.
+**Konsequenz:** Die UI greift über Repository-Interfaces auf eine gemeinsame `MockPlaceDataSource` zu. Assets werden nie direkt verändert; Schreiboperationen betreffen ausschließlich die internen Arbeitskopien der JSON-Dateien. Eine spätere Remote-Datenquelle kann hinter denselben Interfaces ergänzt werden.
 
 ## ADR-005: Standortbestätigung zunächst simuliert oder vereinfacht
 
 **Status:** vorläufige Empfehlung
 
-Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden. Der Bewertungsbutton bleibt sichtbar, ist aber deaktiviert bzw. ausgegraut, wenn die Vor-Ort-Bestätigung nicht erfüllt ist.
+Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden. Der Bewertungsbereich bleibt sichtbar, ist aber deaktiviert bzw. ausgegraut, wenn die Vor-Ort-Bestätigung nicht erfüllt ist. Für eine spätere echte Prüfung ist zusätzlich eine Mindestaufenthaltsdauer vorgesehen, damit kurze Vorbeifahrten nicht als belastbarer Besuch gelten.
 
 **Begründung:** Echte GPS-Prüfung bringt zusätzliche Komplexität durch Permissions, Datenschutz, Emulator-Setup, ungenaue Standortdaten und Edge Cases.
 
-**Konsequenz:** Die Architektur sollte eine spätere echte Standortprüfung ermöglichen, aber die Live-Demo nicht davon abhängig machen.
+**Konsequenz:** Die Architektur ermöglicht eine spätere echte Standortprüfung und Mindestaufenthaltsdauer. Auf dem Feature-Branch für Issue #6 wird `SIMULATED_CONFIRMED` ausschließlich zur IDE- und MVP-Demonstration gesetzt; dies ist kein Produktionszustand und kein Defekt der Vor-Ort-Regel.
 
 ## ADR-006: Bewertungsalter als Kernbestandteil des Ranking-Systems
 
@@ -64,15 +64,17 @@ Jeder größere Screen wird als Feature betrachtet. Pro Feature gibt es eine `Sc
 
 **Konsequenz:** Score-Berechnung, Reputationslogik und weitere fachliche Regeln bleiben testbar und präsentationsfreundlich erklärbar.
 
-## ADR-008: Mock-Map und Bottom-Sheet statt echter Kartenintegration
+## ADR-008: Mock-Map und zusammenhängendes Bottom-Sheet statt echter Kartenintegration
 
 **Status:** entschieden für MVP
 
-Der MVP verwendet eine Mock-Map. Ohne ausgewählten Ort zeigt die Map Default-Shortcuts. Nach Auswahl eines Ortes öffnet sich eine Mini-Preview bzw. Schnellübersichtsleiste, die später per Swipe zur Detailansicht erweitert werden kann.
+Der MVP verwendet eine Mock-Map. Ohne ausgewählten Ort zeigt die Map Default-Shortcuts. Nach Auswahl eines Ortes öffnet sich eine Mini-Preview bzw. Schnellübersichtsleiste, die per Swipe zur Detailansicht erweitert wird. Map, Mini-Preview, Detailinformationen und Bewertung bilden bewusst einen räumlich zusammenhängenden Flow.
 
-**Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen.
+Die Bewertung ist im regulären App-Flow **keine separate Vollbildseite**. Im kompakten Peek-Zustand werden Ortsname, Kurzinfo und aggregierte Werte angezeigt. Erst nach dem Hochziehen erscheinen die Schnellbewertung über die drei Slider, ein optional aufklappbares Textrezensionsfeld sowie darunter die bestehenden Rezensionen.
 
-**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann.
+**Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen. Der zusammenhängende Bottom-Sheet-Flow erhält außerdem die visuelle Kontinuität zwischen Kartenauswahl, Detailansicht und Bewertung und verhindert konkurrierende Buttons mit ähnlicher Bedeutung.
+
+**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann. Das Bottom-Sheet trägt die Verantwortung für Peek-, Detail-, Bewertungs- und Review-Zustand. Wenn die Detailansicht wieder auf den Peek-Zustand verkleinert wird, springt ihr interner Scrollzustand auf den Anfang zurück, damit erneut die kompakte Ortsvorschau sichtbar ist.
 
 ## ADR-009: Profil, Nutzer-Score und Review-Reaktionen als MVP-nahe Bestandteile
 
@@ -91,3 +93,33 @@ Profilseite, Nutzer-Score, Textrezensionen, Likes/Dislikes und Bookmarks sind na
 Die eigene Bewertungs-Historie kann für den Nutzer selbst hilfreich sein. Eine vollständig öffentliche Historie könnte aber Rückschlüsse auf Identität, Bewegungsmuster oder häufig besuchte Orte erlauben.
 
 **Konsequenz:** Es muss entschieden werden, ob fremde Nutzer nur aggregierte Profilinformationen sehen, während die vollständige Historie privat bleibt.
+
+## ADR-011: Gespeicherte Rezensionen werden direkt in der Detailansicht sichtbar
+
+**Status:** entschieden für MVP
+
+Nach dem Speichern einer Bewertung soll die Repository-Schicht erneut gelesen werden. Eine eingegebene Textrezension erscheint dadurch unmittelbar im Review-Bereich desselben Ortes. Der Bereich liegt unterhalb des Bewertungsformulars im erweiterten Bottom-Sheet.
+
+Mindestens die Sortierungen **Rezent** und **Beliebt** werden sichtbar angeboten. „Rezent“ sortiert absteigend nach Zeitstempel. „Beliebt“ verwendet vorläufig die Netto-Reaktionen `likes - dislikes` und eine logarithmisch wachsende Altersstrafe. Die Strafe ist anfangs deutlich und flacht mit zunehmendem Alter ab. So können aktuelle populäre Meinungen aufsteigen, ohne dass ältere hilfreiche Rezensionen zwangsläufig vollständig bedeutungslos werden.
+
+**Konsequenz:** Issue #6 verantwortet Eingabe, Speicherung und unmittelbar sichtbare Rückmeldung. Ausklappbare Review-Texte, Reaktionsinteraktionen und weiterführende Filter bleiben mit den Issues #18 und #19 abgestimmt.
+
+## ADR-012: Eine Bewertung pro Nutzer, Ort und 24-Stunden-Zeitraum
+
+**Status:** entschieden für MVP
+
+Nach einer abgegebenen Bewertung darf derselbe Nutzer denselben Ort erst 24 Stunden später erneut bewerten. Die Sperre gilt sowohl für reine Zahlenbewertungen als auch für Bewertungen mit Textrezension.
+
+**Begründung:** Ohne Sperrfrist könnten einzelne Nutzer den Orts-Score durch viele unmittelbar aufeinanderfolgende Bewertungen manipulieren. Die Regel begrenzt Spam, ohne regelmäßige neue Eindrücke grundsätzlich auszuschließen.
+
+**Konsequenz:** Die Regel liegt als `ReviewSubmissionCooldownPolicy` in der Domain-Schicht. Während der Sperrfrist werden Slider und Textfeld deaktiviert. Der Speichern-Button ist nicht klickbar, zeigt die verbleibende Zeit an und verwendet zur freundlichen Kennzeichnung einen Curry-/Goldton.
+
+## ADR-013: Textrezensionslisten sind auf 50 Einträge begrenzt
+
+**Status:** Anzeige entschieden, persistente Bereinigung noch umzusetzen
+
+Sowohl „Rezent“ als auch „Beliebt“ zeigen pro Ort höchstens 50 Textrezensionen. Dadurch bleibt die Detailansicht bei stark frequentierten Orten performant und übersichtlich.
+
+Für „Rezent“ werden die 50 neuesten Texte angezeigt. Für „Beliebt“ werden die 50 höchsten zeitabhängigen Popularitätswerte angezeigt. Sobald die persistente Bereinigung umgesetzt wird, darf bei verdrängten Einträgen ausschließlich der Rezensionstext entfernt werden. Die numerischen Werte für Vibes, Sicherheit und Erreichbarkeit sowie der Zeitstempel bleiben erhalten und fließen weiterhin in den zeitlich gewichteten Orts-Score ein.
+
+**Konsequenz:** Die UI begrenzt die sichtbaren Listen bereits auf 50 Einträge. Das tatsächliche Entfernen verdrängter Texte aus der lokalen Datenhaltung wird in Issue #18 separat umgesetzt, damit keine numerischen Bewertungsdaten verloren gehen.

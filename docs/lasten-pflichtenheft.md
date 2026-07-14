@@ -166,11 +166,12 @@ Die echte GPS-basierte Standortprüfung wird zunächst nicht als harte Muss-Anfo
 
 ### 5.7 Datenhaltung
 
-Für den MVP wird eine lokale/prototypische Datenhaltung empfohlen. Möglich sind:
+Für den MVP wird eine lokale JSON-basierte Mock-Datenhaltung verwendet:
 
 - feste Mock-Daten für Orte,
 - Mock-Daten für Reviews, Likes/Dislikes, Bookmarks und Nutzer-Score,
-- In-Memory-Speicherung während der Demo,
+- persistente Arbeitskopien der JSON-Dateien im internen App-Speicher,
+- zentralisierte CRUD-Operationen in der Mock-Datenquelle,
 - optional lokale Persistenz über Room/SQLite, falls der Scope es erlaubt.
 
 Wichtig ist, dass die UI nicht direkt von hart codierten Daten abhängt, sondern über eine Repository-Schicht arbeitet.

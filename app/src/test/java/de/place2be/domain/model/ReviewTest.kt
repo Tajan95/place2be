@@ -35,8 +35,8 @@ class ReviewTest {
         text: String? = null,
         likes: Int = 0,
     ) = Review(
-        placeUuid = UUID.fromString("11111111-1111-4111-8111-111111111111"),
-        userUuid = UUID.fromString("aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa"),
+        placeUuid = UUID.fromString("f3083775-2658-4c7b-82c7-98f010d0a289"),
+        userUuid = UUID.fromString("cee4ebc1-9d8d-4208-85cf-f4ab01496e75"),
         vibe = vibe,
         safety = safety,
         accessibility = accessibility,
