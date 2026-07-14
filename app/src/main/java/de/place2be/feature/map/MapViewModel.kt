@@ -1,6 +1,7 @@
 package de.place2be.feature.map
 
 import de.place2be.core.location.LocationConfirmationState
+import de.place2be.core.location.RatingEligibilityPolicy
 import de.place2be.domain.model.Place
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.model.PlaceCategory
@@ -19,8 +20,10 @@ class MapViewModel(
     private val placeRepository: PlaceRepository,
     private val userRepository: UserRepository,
     private val calculatePlaceScoreUseCase: CalculatePlaceScoreUseCase = CalculatePlaceScoreUseCase(),
+    private val ratingEligibilityPolicy: RatingEligibilityPolicy = RatingEligibilityPolicy(),
     private val currentUserUuid: UUID = DEMO_USER_UUID,
     private val locationConfirmationState: LocationConfirmationState = LocationConfirmationState.NOT_REQUESTED,
+    private val onSiteSinceTimestampMillis: Long? = null,
 ) {
     fun getMapItems(): List<MapPlaceUiState> {
         val places = placeRepository.getPlaces()
@@ -47,6 +50,10 @@ class MapViewModel(
             reviews = reviews,
             fallbackScore = initialScore,
         )
+        val ratingEligibility = ratingEligibilityPolicy.evaluate(
+            locationConfirmationState = locationConfirmationState,
+            onSiteSinceTimestampMillis = onSiteSinceTimestampMillis,
+        )
 
         return MapPlaceUiState(
             uuid = uuid,
@@ -63,8 +70,8 @@ class MapViewModel(
             mapXFraction = coordinateBounds.xFraction(longitude),
             mapYFraction = coordinateBounds.yFraction(latitude),
             bookmarkedAtMillis = bookmarkedAtMillis,
-            canRate = locationConfirmationState == LocationConfirmationState.CONFIRMED_ON_SITE ||
-                locationConfirmationState == LocationConfirmationState.SIMULATED_CONFIRMED,
+            canRate = ratingEligibility.canRate,
+            ratingEligibilityMessage = ratingEligibility.helperText,
         )
     }
 
@@ -139,6 +146,7 @@ data class MapPlaceUiState(
     val mapYFraction: Float,
     val bookmarkedAtMillis: Long?,
     val canRate: Boolean,
+    val ratingEligibilityMessage: String,
 ) {
     val isBookmarked: Boolean
         get() = bookmarkedAtMillis != null
