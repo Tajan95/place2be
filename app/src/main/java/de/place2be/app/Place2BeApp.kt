@@ -24,8 +24,10 @@ import java.util.UUID
  * Die Bewertung bleibt Teil der erweiterbaren Orts-Detailansicht über der Map.
  * Die Vor-Ort-Bedingung wird auf diesem Feature-Branch bewusst simuliert, damit
  * Slider, Textrezension, Persistenz, Cooldown und Score-Aktualisierung in der IDE
- * getestet werden können. Die fachliche Standort-/Mindestaufenthaltslogik bleibt
- * in core.location vorbereitet.
+ * getestet werden können. Nur die Standortfreigabe ist simuliert; die
+ * 24-Stunden-Sperre wird anhand der tatsächlich gespeicherten Reviews geprüft.
+ * Die fachliche Standort-/Mindestaufenthaltslogik bleibt in core.location
+ * vorbereitet.
  */
 @Composable
 fun Place2BeApp() {
