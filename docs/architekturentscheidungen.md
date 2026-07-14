@@ -40,11 +40,11 @@ Der MVP wird lokal mit JSON-Mock-Daten umgesetzt. Orte, Bewertungen, Textrezensi
 
 **Status:** vorläufige Empfehlung
 
-Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden. Der Bewertungsbutton bleibt sichtbar, ist aber deaktiviert bzw. ausgegraut, wenn die Vor-Ort-Bestätigung nicht erfüllt ist.
+Die App-Idee sieht vor, dass Nutzerinnen und Nutzer per Standort bestätigen, dass sie tatsächlich vor Ort sind. Für den MVP kann diese Prüfung vereinfacht oder simuliert werden. Der Bewertungsbereich bleibt sichtbar, ist aber deaktiviert bzw. ausgegraut, wenn die Vor-Ort-Bestätigung nicht erfüllt ist. Für eine spätere echte Prüfung ist zusätzlich eine Mindestaufenthaltsdauer vorgesehen, damit kurze Vorbeifahrten nicht als belastbarer Besuch gelten.
 
 **Begründung:** Echte GPS-Prüfung bringt zusätzliche Komplexität durch Permissions, Datenschutz, Emulator-Setup, ungenaue Standortdaten und Edge Cases.
 
-**Konsequenz:** Die Architektur sollte eine spätere echte Standortprüfung ermöglichen, aber die Live-Demo nicht davon abhängig machen.
+**Konsequenz:** Die Architektur ermöglicht eine spätere echte Standortprüfung und Mindestaufenthaltsdauer. Auf dem Feature-Branch für Issue #6 wird `SIMULATED_CONFIRMED` ausschließlich zur IDE- und MVP-Demonstration gesetzt; dies ist kein Produktionszustand und kein Defekt der Vor-Ort-Regel.
 
 ## ADR-006: Bewertungsalter als Kernbestandteil des Ranking-Systems
 
@@ -64,15 +64,17 @@ Jeder größere Screen wird als Feature betrachtet. Pro Feature gibt es eine `Sc
 
 **Konsequenz:** Score-Berechnung, Reputationslogik und weitere fachliche Regeln bleiben testbar und präsentationsfreundlich erklärbar.
 
-## ADR-008: Mock-Map und Bottom-Sheet statt echter Kartenintegration
+## ADR-008: Mock-Map und zusammenhängendes Bottom-Sheet statt echter Kartenintegration
 
 **Status:** entschieden für MVP
 
-Der MVP verwendet eine Mock-Map. Ohne ausgewählten Ort zeigt die Map Default-Shortcuts. Nach Auswahl eines Ortes öffnet sich eine Mini-Preview bzw. Schnellübersichtsleiste, die später per Swipe zur Detailansicht erweitert werden kann.
+Der MVP verwendet eine Mock-Map. Ohne ausgewählten Ort zeigt die Map Default-Shortcuts. Nach Auswahl eines Ortes öffnet sich eine Mini-Preview bzw. Schnellübersichtsleiste, die per Swipe zur Detailansicht erweitert wird. Map, Mini-Preview, Detailinformationen und Bewertung bilden bewusst einen räumlich zusammenhängenden Flow.
 
-**Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen.
+Die Bewertung ist im regulären App-Flow **keine separate Vollbildseite**. Im kompakten Peek-Zustand werden Ortsname, Kurzinfo und aggregierte Werte angezeigt. Erst nach dem Hochziehen erscheinen die Schnellbewertung über die drei Slider, ein optional aufklappbares Textrezensionsfeld sowie darunter die bestehenden Rezensionen.
 
-**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann.
+**Begründung:** Die App soll die Produktidee klar zeigen, ohne API-Keys, Karten-SDKs oder Live-Geodaten integrieren zu müssen. Der zusammenhängende Bottom-Sheet-Flow erhält außerdem die visuelle Kontinuität zwischen Kartenauswahl, Detailansicht und Bewertung und verhindert konkurrierende Buttons mit ähnlicher Bedeutung.
+
+**Konsequenz:** Echte Kartenintegration bleibt Ausblick. Die Mock-Map muss aber strukturell so gebaut sein, dass eine echte Karte später angebunden werden kann. Das Bottom-Sheet trägt die Verantwortung für Peek-, Detail-, Bewertungs- und Review-Zustand.
 
 ## ADR-009: Profil, Nutzer-Score und Review-Reaktionen als MVP-nahe Bestandteile
 
@@ -91,3 +93,13 @@ Profilseite, Nutzer-Score, Textrezensionen, Likes/Dislikes und Bookmarks sind na
 Die eigene Bewertungs-Historie kann für den Nutzer selbst hilfreich sein. Eine vollständig öffentliche Historie könnte aber Rückschlüsse auf Identität, Bewegungsmuster oder häufig besuchte Orte erlauben.
 
 **Konsequenz:** Es muss entschieden werden, ob fremde Nutzer nur aggregierte Profilinformationen sehen, während die vollständige Historie privat bleibt.
+
+## ADR-011: Gespeicherte Rezensionen werden direkt in der Detailansicht sichtbar
+
+**Status:** entschieden für MVP
+
+Nach dem Speichern einer Bewertung soll die Repository-Schicht erneut gelesen werden. Eine eingegebene Textrezension erscheint dadurch unmittelbar im Review-Bereich desselben Ortes. Der Bereich liegt unterhalb des Bewertungsformulars im erweiterten Bottom-Sheet.
+
+Mindestens die Sortierungen **Rezent** und **Beliebt** werden sichtbar vorbereitet. „Rezent“ sortiert nach Zeitstempel; „Beliebt“ orientiert sich zunächst an Likes abzüglich Dislikes. Die eigentliche Reaktionsinteraktion kann im zugehörigen Folgeissue weiter ausgebaut werden.
+
+**Konsequenz:** Issue #6 verantwortet Eingabe, Speicherung und unmittelbar sichtbare Rückmeldung. Ausklappbare Review-Texte, Reaktionsinteraktionen und weiterführende Filter bleiben mit den Issues #18 und #19 abgestimmt.
