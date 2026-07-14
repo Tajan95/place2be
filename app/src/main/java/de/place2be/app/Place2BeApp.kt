@@ -36,7 +36,9 @@ fun Place2BeApp() {
     var dataRevision by rememberSaveable { mutableStateOf(0) }
     var selectedPlaceUuidString by rememberSaveable { mutableStateOf<String?>(null) }
     var routeName by rememberSaveable { mutableStateOf(Place2BeRoute.MAP.name) }
-    var ratingState by rememberSaveable { mutableStateOf(RatingUiState()) }
+    // RatingUiState is a plain Kotlin data class and currently has no Saver/Parcelable.
+    // Keeping this draft state non-saveable avoids a runtime crash during app start.
+    var ratingState by remember { mutableStateOf(RatingUiState()) }
 
     val mapViewModel = remember(placeRepository, userRepository, dataRevision) {
         MapViewModel(
