@@ -8,7 +8,8 @@ import kotlin.math.max
  *
  * Alle sichtbaren Werte stammen aus derselben Bewertungsmenge und verwenden
  * dieselbe Altersgewichtung. Dadurch bleiben Gesamtwert und Einzelkriterien
- * fachlich konsistent.
+ * fachlich konsistent. Zusätzlich enthält das Ergebnis sowohl die gesamte
+ * Bewertungsanzahl als auch den rollierenden Ein-Jahres-Ausschnitt für die UI.
  */
 data class PlaceScoreResult(
     val overallScore: Double,
@@ -16,6 +17,7 @@ data class PlaceScoreResult(
     val safetyScore: Double,
     val accessibilityScore: Double,
     val reviewCount: Int,
+    val recentReviewCount: Int,
 )
 
 /**
@@ -44,6 +46,10 @@ class CalculatePlaceScoreUseCase(
         require(fallbackScore in SCORE_RANGE) { "Fallback score must be between 1 and 5." }
         require(nowTimestampMillis >= 0L) { "Current timestamp must not be negative." }
 
+        val recentReviewCount = reviews.count { review ->
+            review.timestampMillis in (nowTimestampMillis - ONE_YEAR_MILLIS)..nowTimestampMillis
+        }
+
         if (reviews.isEmpty()) {
             return PlaceScoreResult(
                 overallScore = fallbackScore,
@@ -51,6 +57,7 @@ class CalculatePlaceScoreUseCase(
                 safetyScore = fallbackScore,
                 accessibilityScore = fallbackScore,
                 reviewCount = 0,
+                recentReviewCount = 0,
             )
         }
 
@@ -79,6 +86,7 @@ class CalculatePlaceScoreUseCase(
                 safetyScore = fallbackScore,
                 accessibilityScore = fallbackScore,
                 reviewCount = reviews.size,
+                recentReviewCount = recentReviewCount,
             )
         }
 
@@ -93,6 +101,7 @@ class CalculatePlaceScoreUseCase(
             safetyScore = safetyScore,
             accessibilityScore = accessibilityScore,
             reviewCount = reviews.size,
+            recentReviewCount = recentReviewCount,
         )
     }
 
@@ -110,6 +119,7 @@ class CalculatePlaceScoreUseCase(
     private companion object {
         const val DEFAULT_DECAY_FACTOR_PER_DAY = 0.05
         const val MILLIS_PER_DAY = 86_400_000.0
+        const val ONE_YEAR_MILLIS = 365L * 86_400_000L
         const val NUMBER_OF_CRITERIA = 3.0
         val SCORE_RANGE = 1.0..5.0
     }
