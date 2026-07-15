@@ -12,18 +12,20 @@ class PlaceDetailViewModel(
     fun getPlaceDetail(placeUuid: UUID): PlaceDetailUiState? {
         val place = placeRepository.getPlace(placeUuid) ?: return null
         val reviews = placeRepository.getReviewsForPlace(placeUuid)
+        val scoreResult = calculatePlaceScoreUseCase.calculate(
+            reviews = reviews,
+            fallbackScore = place.initialScore,
+        )
+
         return PlaceDetailUiState(
             uuid = place.uuid,
             name = place.name,
             description = place.description,
             categoryLabel = place.category.name,
             locationHint = place.locationHint,
-            currentScore = calculatePlaceScoreUseCase.calculate(
-                reviews = reviews,
-                fallbackScore = place.initialScore,
-            ),
+            currentScore = scoreResult.overallScore,
             attributes = place.attributes.toList(),
-            reviewCount = reviews.size,
+            reviewCount = scoreResult.reviewCount,
         )
     }
 }
