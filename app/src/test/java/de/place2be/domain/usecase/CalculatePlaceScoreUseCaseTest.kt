@@ -22,6 +22,7 @@ class CalculatePlaceScoreUseCaseTest {
         assertEquals(3.6, result.safetyScore, DELTA)
         assertEquals(3.6, result.accessibilityScore, DELTA)
         assertEquals(0, result.reviewCount)
+        assertEquals(0, result.recentReviewCount)
     }
 
     @Test
@@ -52,6 +53,7 @@ class CalculatePlaceScoreUseCaseTest {
         assertEquals(result.overallScore, result.safetyScore, DELTA)
         assertEquals(result.overallScore, result.accessibilityScore, DELTA)
         assertEquals(2, result.reviewCount)
+        assertEquals(2, result.recentReviewCount)
     }
 
     @Test
@@ -83,6 +85,37 @@ class CalculatePlaceScoreUseCaseTest {
             result.overallScore,
             DELTA,
         )
+    }
+
+    @Test
+    fun `recent review count uses a rolling one-year window`() {
+        val currentReview = review(
+            vibe = 4,
+            safety = 4,
+            accessibility = 4,
+            timestampMillis = NOW,
+        )
+        val almostOneYearOldReview = review(
+            vibe = 3,
+            safety = 3,
+            accessibility = 3,
+            timestampMillis = NOW - 364 * MILLIS_PER_DAY,
+        )
+        val olderThanOneYearReview = review(
+            vibe = 5,
+            safety = 5,
+            accessibility = 5,
+            timestampMillis = NOW - 366 * MILLIS_PER_DAY,
+        )
+
+        val result = useCase.calculate(
+            reviews = listOf(currentReview, almostOneYearOldReview, olderThanOneYearReview),
+            fallbackScore = 3.0,
+            nowTimestampMillis = NOW,
+        )
+
+        assertEquals(3, result.reviewCount)
+        assertEquals(2, result.recentReviewCount)
     }
 
     private fun review(
