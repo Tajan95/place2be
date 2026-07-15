@@ -62,7 +62,7 @@ Eine neue Bewertung besitzt damit das Gewicht `1,0`. Eine 30 Tage alte Bewertung
 
 **Begründung:** Öffentliche Orte können sich verändern. Eine gute oder schlechte Bewertung von vor Monaten sollte weniger relevant sein als aktuelles Feedback. Gleichzeitig bleiben ältere Erfahrungen als abgeschwächte Langzeitinformation erhalten.
 
-**Konsequenz:** `CalculatePlaceScoreUseCase` liefert ein gemeinsames `PlaceScoreResult` mit Gesamtwert, den drei gewichteten Kriterien und der Anzahl berücksichtigter Bewertungen. Kartenmarker, Preview und Detailansicht verwenden ausschließlich dieses Ergebnisobjekt. Die Orts-Score-Zerfallslogik bleibt klar von der Popularitäts-Penalty sichtbarer Textrezensionen aus ADR-011 bzw. Issue #19 getrennt.
+**Konsequenz:** `CalculatePlaceScoreUseCase` liefert ein gemeinsames `PlaceScoreResult` mit Gesamtwert, den drei gewichteten Kriterien, der gesamten Bewertungsanzahl und der Bewertungsanzahl im rollierenden Ein-Jahres-Fenster. Kartenmarker, Preview und Detailansicht verwenden ausschließlich dieses Ergebnisobjekt. Die Orts-Score-Zerfallslogik bleibt klar von der Popularitäts-Penalty sichtbarer Textrezensionen aus ADR-011 bzw. Issue #19 getrennt.
 
 ## ADR-007: MVVM- und Feature-orientierte Struktur
 
@@ -131,3 +131,13 @@ Sowohl „Rezent“ als auch „Beliebt“ zeigen pro Ort höchstens 50 Textreze
 Für „Rezent“ werden die 50 neuesten Texte angezeigt. Für „Beliebt“ werden die 50 höchsten zeitabhängigen Popularitätswerte angezeigt. Sobald die persistente Bereinigung umgesetzt wird, darf bei verdrängten Einträgen ausschließlich der Rezensionstext entfernt werden. Die numerischen Werte für Vibes, Sicherheit und Erreichbarkeit sowie der Zeitstempel bleiben erhalten und fließen weiterhin in den zeitlich gewichteten Orts-Score ein.
 
 **Konsequenz:** Die UI begrenzt die sichtbaren Listen bereits auf 50 Einträge. Das tatsächliche Entfernen verdrängter Texte aus der lokalen Datenhaltung wird in Issue #18 separat umgesetzt, damit keine numerischen Bewertungsdaten verloren gehen.
+
+## ADR-014: Bewertungsanzahl als rollierender Ein-Jahres-Ausschnitt
+
+**Status:** entschieden für MVP
+
+Die Detailansicht zeigt unterhalb der aggregierten Kriterien den Hinweis `Im letzten Jahr insgesamt X Bewertungen`. Gezählt werden ausschließlich Bewertungen mit einem Zeitstempel innerhalb der vergangenen 365 Tage. Ältere Bewertungen bleiben weiterhin in der zeitlich gewichteten Score-Berechnung erhalten, werden aber nicht mehr im sichtbaren Aktivitätszähler geführt.
+
+**Begründung:** Die gesamte historische Bewertungsanzahl kann bei lange bestehenden Orten einen falschen Eindruck aktueller Community-Aktivität vermitteln. Der rollierende Jahreswert ist als Referenzpunkt für die Belastbarkeit und Aktualität des sichtbaren Scores aussagekräftiger.
+
+**Konsequenz:** Eine neu abgegebene Bewertung erhöht den Zähler unmittelbar um eins. Orte ohne Bewertungen werden in der Detailansicht als `Noch nicht bewertet.` gekennzeichnet. Für die MVP-Demo enthalten alle fünf Seed-Orte sechs Bewertungen von unterschiedlichen Mock-Nutzern; fünf liegen innerhalb des letzten Jahres und eine ältere Bewertung demonstriert, dass historische Zahlen weiterhin abgeschwächt in den Score einfließen, ohne im Jahreszähler zu erscheinen. Der Demo-Nutzer selbst besitzt keine Seed-Bewertung, damit das Hinzufügen und Hochzählen in der Präsentation nachvollziehbar getestet werden kann.
