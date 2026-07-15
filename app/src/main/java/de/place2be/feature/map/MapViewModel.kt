@@ -5,7 +5,6 @@ import de.place2be.core.location.RatingEligibilityPolicy
 import de.place2be.domain.model.Place
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.model.PlaceCategory
-import de.place2be.domain.model.Review
 import de.place2be.domain.repository.PlaceRepository
 import de.place2be.domain.repository.UserRepository
 import de.place2be.domain.usecase.CalculatePlaceScoreUseCase
@@ -25,7 +24,7 @@ class MapViewModel(
     private val locationConfirmationState: LocationConfirmationState = LocationConfirmationState.NOT_REQUESTED,
     private val onSiteSinceTimestampMillis: Long? = null,
 ) {
-    fun getMapItems(): List<MapPlaceUiState> {
+    fun getMapItems(nowTimestampMillis: Long = System.currentTimeMillis()): List<MapPlaceUiState> {
         val places = placeRepository.getPlaces()
         val bookmarksByPlaceUuid = userRepository.getBookmarks(currentUserUuid)
             .associateBy { it.placeUuid }
@@ -36,19 +35,25 @@ class MapViewModel(
                 place.toMapPlaceUiState(
                     coordinateBounds = coordinateBounds,
                     bookmarkedAtMillis = bookmarksByPlaceUuid[place.uuid]?.createdAtMillis,
+                    nowTimestampMillis = nowTimestampMillis,
                 )
             }
-            .sortedByDescending(MapPlaceUiState::currentScore)
+            .sortedWith(
+                compareByDescending<MapPlaceUiState> { it.hasReviews }
+                    .thenByDescending(MapPlaceUiState::currentScore),
+            )
     }
 
     private fun Place.toMapPlaceUiState(
         coordinateBounds: CoordinateBounds,
         bookmarkedAtMillis: Long?,
+        nowTimestampMillis: Long,
     ): MapPlaceUiState {
         val reviews = placeRepository.getReviewsForPlace(uuid)
-        val currentScore = calculatePlaceScoreUseCase.calculate(
+        val scoreResult = calculatePlaceScoreUseCase.calculate(
             reviews = reviews,
             fallbackScore = initialScore,
+            nowTimestampMillis = nowTimestampMillis,
         )
         val ratingEligibility = ratingEligibilityPolicy.evaluate(
             locationConfirmationState = locationConfirmationState,
@@ -63,10 +68,12 @@ class MapViewModel(
             categoryLabel = category.toDisplayLabel(),
             locationHint = locationHint,
             attributes = attributes,
-            currentScore = currentScore,
-            vibeScore = reviews.averageOf(Review::vibe, currentScore),
-            safetyScore = reviews.averageOf(Review::safety, currentScore),
-            accessibilityScore = reviews.averageOf(Review::accessibility, currentScore),
+            currentScore = scoreResult.overallScore,
+            vibeScore = scoreResult.vibeScore,
+            safetyScore = scoreResult.safetyScore,
+            accessibilityScore = scoreResult.accessibilityScore,
+            reviewCount = scoreResult.reviewCount,
+            recentReviewCount = scoreResult.recentReviewCount,
             mapXFraction = coordinateBounds.xFraction(longitude),
             mapYFraction = coordinateBounds.yFraction(latitude),
             bookmarkedAtMillis = bookmarkedAtMillis,
@@ -74,11 +81,6 @@ class MapViewModel(
             ratingEligibilityMessage = ratingEligibility.helperText,
         )
     }
-
-    private fun List<Review>.averageOf(
-        selector: (Review) -> Int,
-        fallback: Double,
-    ): Double = if (isEmpty()) fallback else map(selector).average()
 
     private data class CoordinateBounds(
         val minLatitude: Double,
@@ -142,6 +144,8 @@ data class MapPlaceUiState(
     val vibeScore: Double,
     val safetyScore: Double,
     val accessibilityScore: Double,
+    val reviewCount: Int,
+    val recentReviewCount: Int,
     val mapXFraction: Float,
     val mapYFraction: Float,
     val bookmarkedAtMillis: Long?,
@@ -150,6 +154,9 @@ data class MapPlaceUiState(
 ) {
     val isBookmarked: Boolean
         get() = bookmarkedAtMillis != null
+
+    val hasReviews: Boolean
+        get() = reviewCount > 0
 }
 
 internal data class MapFilterSelection(
@@ -166,7 +173,7 @@ internal fun List<MapPlaceUiState>.filteredBy(selection: MapFilterSelection): Li
     }
 
 internal fun List<MapPlaceUiState>.popularFirst(): List<MapPlaceUiState> =
-    sortedByDescending(MapPlaceUiState::currentScore)
+    filter(MapPlaceUiState::hasReviews).sortedByDescending(MapPlaceUiState::currentScore)
 
 internal fun List<MapPlaceUiState>.newestBookmarksFirst(): List<MapPlaceUiState> =
     filter(MapPlaceUiState::isBookmarked).sortedByDescending { it.bookmarkedAtMillis }

@@ -231,7 +231,14 @@ private fun InlinePlaceDetailSheet(
 
         // Alles ab hier liegt unterhalb des Peek-Bereichs und wird erst beim
         // Hochziehen zur Detailansicht sichtbar.
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(22.dp))
+        Text(
+            text = recentReviewCountLabel(place.recentReviewCount),
+            color = DarkInk.copy(alpha = 0.62f),
+            fontSize = 12.sp,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
+        Spacer(Modifier.height(18.dp))
         Text(
             text = "Deine Bewertung",
             color = DarkInk,
@@ -491,6 +498,23 @@ private fun PlaceSummary(place: MapPlaceUiState) {
 
 @Composable
 private fun AggregatedRatings(place: MapPlaceUiState) {
+    if (!place.hasReviews) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            color = LeafSurface.copy(alpha = 0.55f),
+        ) {
+            Text(
+                text = "Noch nicht bewertet.",
+                color = DarkInk.copy(alpha = 0.68f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+            )
+        }
+        return
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -706,6 +730,12 @@ private fun reviewPopularityScore(review: Review, nowMillis: Long): Double {
     val ageDays = ((nowMillis - review.timestampMillis).coerceAtLeast(0L) / MILLIS_PER_DAY.toDouble())
     val logarithmicAgePenalty = 1.0 + ln(1.0 + ageDays) / POPULARITY_AGE_PENALTY_SCALE
     return netPositiveReactions / logarithmicAgePenalty
+}
+
+private fun recentReviewCountLabel(recentReviewCount: Int): String = when (recentReviewCount) {
+    0 -> "Im letzten Jahr noch keine Bewertungen"
+    1 -> "Im letzten Jahr insgesamt 1 Bewertung"
+    else -> "Im letzten Jahr insgesamt $recentReviewCount Bewertungen"
 }
 
 private fun formatCooldownRemaining(remainingMillis: Long): String {
