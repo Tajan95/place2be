@@ -3,5 +3,35 @@
     "uuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
     "displayName": "MainEntdecker",
     "userScore": 128
+  },
+  {
+    "uuid": "28b24e13-4cbc-4e59-88a3-c6a692c9389c",
+    "displayName": "Stadtspazierer",
+    "userScore": 84
+  },
+  {
+    "uuid": "914060c3-1f3f-4e20-ba70-1ed4ea2ed66b",
+    "displayName": "Parkfreundin",
+    "userScore": 112
+  },
+  {
+    "uuid": "de97b276-3159-48d0-ae3b-a14d0bb3e149",
+    "displayName": "KulturKollektiv",
+    "userScore": 156
+  },
+  {
+    "uuid": "085c8f55-7c8c-41d2-b945-6f2a80533366",
+    "displayName": "NachtEule",
+    "userScore": 73
+  },
+  {
+    "uuid": "134d79cb-2a74-42fb-98a9-6804a535a857",
+    "displayName": "WegeFinder",
+    "userScore": 96
+  },
+  {
+    "uuid": "68ec3cdf-7246-4c20-8dac-e103a48c4b30",
+    "displayName": "MainMoment",
+    "userScore": 141
   }
 ]
