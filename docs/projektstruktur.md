@@ -10,7 +10,7 @@ Die Struktur soll drei Dinge gleichzeitig leisten:
 2. UI, Datenmodell, Datenzugriff und fachliche Logik sollen sauber getrennt sein.
 3. Eine spätere echte Datenquelle, Kartenintegration oder Standortprüfung soll möglich bleiben, ohne die UI komplett umzubauen.
 
-## Vorgeschlagene Struktur
+## Aktuelle Struktur
 
 ```text
 de.place2be
@@ -19,29 +19,37 @@ de.place2be
 │   └── Place2BeApp.kt
 ├── core
 │   └── location
-│       └── LocationConfirmationState.kt
+│       ├── LocationConfirmationState.kt
+│       └── RatingEligibilityPolicy.kt
 ├── data
 │   ├── mock
 │   │   └── MockPlaceDataSource.kt
 │   └── repository
 │       ├── MockPlaceRepository.kt
+│       ├── MockReviewReactionRepository.kt
 │       └── MockUserRepository.kt
 ├── domain
 │   ├── model
-│   │   ├── Place.kt
 │   │   ├── Bookmark.kt
+│   │   ├── Place.kt
 │   │   ├── PlaceAttribute.kt
 │   │   ├── PlaceCategory.kt
 │   │   ├── Review.kt
-│   │   └── User.kt
+│   │   ├── ReviewReaction.kt
+│   │   ├── User.kt
+│   │   └── UserScoreResult.kt
 │   ├── repository
 │   │   ├── PlaceRepository.kt
+│   │   ├── ReviewReactionRepository.kt
 │   │   └── UserRepository.kt
 │   └── usecase
-│       └── CalculatePlaceScoreUseCase.kt
+│       ├── CalculatePlaceScoreUseCase.kt
+│       ├── CalculateUserScoreUseCase.kt
+│       └── ReviewSubmissionCooldownPolicy.kt
 ├── feature
 │   ├── map
 │   │   ├── MapScreen.kt
+│   │   ├── MapScreenWithRatingEntry.kt
 │   │   └── MapViewModel.kt
 │   ├── onboarding
 │   │   ├── OnboardingScreen.kt
@@ -49,10 +57,14 @@ de.place2be
 │   ├── placeDetail
 │   │   ├── PlaceDetailScreen.kt
 │   │   └── PlaceDetailViewModel.kt
+│   ├── profile
+│   │   ├── ProfileScreen.kt
+│   │   └── ProfileViewModel.kt
 │   └── rating
 │       ├── RatingScreen.kt
 │       └── RatingViewModel.kt
 └── ui
+    ├── component
     └── theme
 ```
 
@@ -60,7 +72,7 @@ de.place2be
 
 ### Feature-Pakete
 
-Jeder größere Screen wird als eigenes Feature verstanden. Das entspricht der Meeting-Entscheidung, dass ein Screen jeweils eine `Screen`-Datei für die UI und eine `ViewModel`-Datei für die Logik bzw. den UI-Zustand bekommen soll.
+Jeder größere Screen wird als eigenes Feature verstanden. Das entspricht der Meeting-Entscheidung, dass ein Screen jeweils eine `Screen`-Datei für die UI und eine `ViewModel`-Datei für Logik bzw. UI-Zustand bekommen soll.
 
 Beispiele:
 
@@ -68,6 +80,8 @@ Beispiele:
 - `feature/map/MapViewModel.kt` bereitet Daten für die Map vor.
 - `feature/rating/RatingScreen.kt` enthält die Bewertungs-UI.
 - `feature/rating/RatingViewModel.kt` verarbeitet Eingaben wie Vibes, Sicherheit und Erreichbarkeit.
+- `feature/profile/ProfileScreen.kt` zeigt Nutzer-Score, aggregierte Kennzahlen und die private eigene Historie.
+- `feature/profile/ProfileViewModel.kt` trennt gemäß ADR-010 zwischen eigenem Profil und öffentlicher Zusammenfassung.
 
 ### Domain-Schicht
 
@@ -78,13 +92,14 @@ Die Domain-Schicht enthält fachliche Konzepte, die unabhängig von Compose oder
 - Kategorien,
 - Tags/Ortseigenschaften,
 - Nutzer,
-- Score-Berechnung.
+- Bookmarks und Review-Reaktionen,
+- Orts- und Nutzer-Score-Berechnung.
 
-Die Score-Logik gehört bewusst nicht in die UI und auch nicht direkt in einen Screen. Sie liegt in `domain/usecase/CalculatePlaceScoreUseCase.kt`, damit sie testbar und in der Präsentation klar erklärbar bleibt.
+Die Score-Logik gehört bewusst nicht in die UI und auch nicht direkt in einen Screen. Sie liegt in `domain/usecase/CalculatePlaceScoreUseCase.kt` und `domain/usecase/CalculateUserScoreUseCase.kt`, damit sie testbar und in der Präsentation klar erklärbar bleibt.
 
 ### Data-Schicht
 
-Die Data-Schicht liefert Daten für die App. Im MVP wird local-first mit JSON-Dateien gearbeitet. `app/src/main/data/mockdata` enthält die versionierten Startdaten und ist als Android-Assets-Quelle registriert. `MockPlaceDataSource` kopiert sie beim ersten Start in den internen App-Speicher und zentralisiert dort CRUD für Orte, Reviews, Nutzer und Bookmarks. Die Repository-Adapter übersetzen diesen Zugriff auf die Domain-Interfaces.
+Die Data-Schicht liefert Daten für die App. Im MVP wird local-first mit JSON-Dateien gearbeitet. `app/src/main/data/mockdata` enthält die versionierten Startdaten und ist als Android-Assets-Quelle registriert. `MockPlaceDataSource` kopiert sie beim ersten Start in den internen App-Speicher und zentralisiert dort CRUD für Orte, Reviews, Nutzer und Bookmarks. Review-Reaktionen werden ebenfalls lokal persistiert. Die Repository-Adapter übersetzen diesen Zugriff auf die Domain-Interfaces.
 
 Später kann diese Schicht erweitert oder ersetzt werden durch:
 
@@ -99,9 +114,14 @@ Die UI sollte davon möglichst wenig wissen.
 
 Die Core-Schicht enthält übergreifende technische Hilfsstrukturen, die keinem einzelnen Feature gehören. Für den MVP ist vor allem die Standortbestätigung relevant, auch wenn die echte GPS-Prüfung noch vereinfacht oder simuliert werden kann.
 
-## Verhältnis zu bestehendem Code
+## Profil und Datenschutz
 
-Im Repository wurden bereits erste Datenstrukturen und Platzhalter angelegt. Diese Struktur greift diese Vorarbeit auf, ordnet die fachlichen Datenmodelle aber klarer in `domain/model` ein. Die Data-Schicht soll vor allem Datenquellen und Repository-Implementierungen enthalten, nicht die fachliche Bedeutung der App-Objekte selbst.
+Das Profil-Feature greift ausschließlich über Repository-Interfaces und Domain-Use-Cases auf Daten zu. `ProfileViewModel` erzeugt zwei fachlich getrennte Ansichten:
+
+- `OWN`: vollständige private Bewertungs-Historie, Score-Aufteilung, Hilfe und vorbereitete Einstellungen,
+- `PUBLIC`: nur aggregierte Profilwerte ohne chronologische Orts- oder Bewegungshistorie.
+
+Im Local-first-MVP ist zunächst nur das eigene Demo-Profil direkt erreichbar. Die öffentliche Variante ist im UI-Zustand vorbereitet und wird durch Unit-Tests abgesichert.
 
 ## Wichtig für die Weiterarbeit
 
@@ -110,3 +130,4 @@ Im Repository wurden bereits erste Datenstrukturen und Platzhalter angelegt. Die
 - Fachliche Berechnungen liegen in `domain/usecase`.
 - Fachliche Datenobjekte liegen in `domain/model`.
 - Datenzugriff wird über `domain/repository` abstrahiert und in `data/repository` umgesetzt.
+- Öffentliche Profilansichten dürfen keine chronologische Bewertungs- oder Bewegungshistorie erhalten, ohne dass die Datenschutzentscheidung bewusst neu bewertet wird.
