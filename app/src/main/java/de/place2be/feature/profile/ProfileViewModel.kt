@@ -72,9 +72,10 @@ class ProfileViewModel(
             score = score,
             reviewCount = userReviews.size,
             textReviewCount = userReviews.count { !it.text.isNullOrBlank() },
-            helpfulReactionCount = userReviews.sumOf { review ->
-                (review.likes - review.dislikes).coerceAtLeast(0)
-            },
+            // Öffentliche Kennzahl: Summe positiver Reaktionen. Dislikes werden
+            // separat in der Reputationsformel berücksichtigt, aber nicht als
+            // "hilfreiche positive Reaktionen" von diesem Zähler abgezogen.
+            helpfulReactionCount = userReviews.sumOf(Review::likes),
             history = history,
         )
     }
