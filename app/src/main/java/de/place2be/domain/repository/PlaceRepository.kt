@@ -15,7 +15,11 @@ interface PlaceRepository {
 
     fun getPlace(placeUuid: UUID): Place?
 
+    fun getReview(reviewUuid: UUID): Review?
+
     fun getReviewsForPlace(placeUuid: UUID): List<Review>
 
     fun addReview(review: Review)
+
+    fun updateReview(review: Review): Boolean
 }
