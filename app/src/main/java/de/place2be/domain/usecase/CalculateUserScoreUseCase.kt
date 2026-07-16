@@ -22,7 +22,7 @@ import kotlin.math.sqrt
  */
 class CalculateUserScoreUseCase(
     private val proximityRadiusMeters: Double = DEFAULT_PROXIMITY_RADIUS_METERS,
-    private val nowMillisProvider: () -> Long = System::currentTimeMillis,
+    private val nowMillisProvider: () -> Long = { System.currentTimeMillis() },
 ) {
     fun calculate(
         userUuid: UUID,
