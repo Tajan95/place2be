@@ -15,7 +15,17 @@ interface PlaceRepository {
 
     fun getPlace(placeUuid: UUID): Place?
 
+    /**
+     * Optionale gezielte Review-Suche. Bestehende alternative Implementierungen
+     * bleiben durch den Default kompatibel; persistente Reaktions-Repositories
+     * sollten diese Methode überschreiben.
+     */
+    fun getReview(reviewUuid: UUID): Review? = null
+
     fun getReviewsForPlace(placeUuid: UUID): List<Review>
 
     fun addReview(review: Review)
+
+    /** Siehe [getReview]; Standardimplementierungen sind zunächst read-only. */
+    fun updateReview(review: Review): Boolean = false
 }

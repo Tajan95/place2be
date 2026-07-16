@@ -141,3 +141,15 @@ Die Detailansicht zeigt unterhalb der aggregierten Kriterien den Hinweis `Im let
 **Begründung:** Die gesamte historische Bewertungsanzahl kann bei lange bestehenden Orten einen falschen Eindruck aktueller Community-Aktivität vermitteln. Der rollierende Jahreswert ist als Referenzpunkt für die Belastbarkeit und Aktualität des sichtbaren Scores aussagekräftiger.
 
 **Konsequenz:** Eine neu abgegebene Bewertung erhöht den Zähler unmittelbar um eins. Orte ohne Bewertungen werden in der Detailansicht als `Noch nicht bewertet.` gekennzeichnet. Für die MVP-Demo enthalten alle fünf Seed-Orte sechs Bewertungen von unterschiedlichen Mock-Nutzern; fünf liegen innerhalb des letzten Jahres und eine ältere Bewertung demonstriert, dass historische Zahlen weiterhin abgeschwächt in den Score einfließen, ohne im Jahreszähler zu erscheinen. Der Demo-Nutzer selbst besitzt keine Seed-Bewertung, damit das Hinzufügen und Hochzählen in der Präsentation nachvollziehbar getestet werden kann.
+
+## ADR-015: Review-Reaktionen sind accountgebunden und umschaltbar
+
+**Status:** entschieden und für den Local-first-MVP umgesetzt
+
+Likes und Dislikes werden als eigenständige `ReviewReaction` mit Nutzer-, Review-, Reaktions- und Zeitbezug gespeichert. Pro Nutzer und Rezension ist höchstens eine Reaktion zulässig. Das erste Antippen legt eine Reaktion an, erneutes Antippen derselben Reaktion entfernt sie, und das Antippen der jeweils anderen Reaktion wechselt zwischen Like und Dislike. Eigene Rezensionen können nicht bewertet werden.
+
+Die vorhandenen Like-/Dislike-Werte der Seed-Reviews repräsentieren einen bereits bestehenden Community-Stand. Neue Reaktionen des Demo-Nutzers werden zusätzlich in `review_reactions.json` persistiert und verändern die aggregierten Zähler der betroffenen Rezension unmittelbar.
+
+**Begründung:** Eine reine Änderung an zwei Zählerfeldern würde Mehrfach-Reaktionen desselben Accounts erlauben und könnte später nicht sauber für Reputation oder Moderation ausgewertet werden. Der explizite Reaktionsdatensatz schafft die notwendige Nachvollziehbarkeit und verhindert einen einfachen Score-Maximierungsweg über eigene Rezensionen.
+
+**Konsequenz:** Der aktuelle Reaktionszustand wird in der UI hervorgehoben, bleibt nach einem App-Neustart erhalten und beeinflusst unmittelbar die Sortierung `Beliebt`. Für Issue #16 ist vorbereitet, dass erhaltene Likes auf eigene Rezensionen stärker zur Reputation beitragen können als das aktive Bewerten fremder Rezensionen. Die genaue Normalisierung und Gewichtung des Nutzer-Scores bleibt dort zu entscheiden.

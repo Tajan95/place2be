@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import de.place2be.core.location.LocationConfirmationState
 import de.place2be.data.mock.MockPlaceDataSource
 import de.place2be.data.repository.MockPlaceRepository
+import de.place2be.data.repository.MockReviewReactionRepository
 import de.place2be.data.repository.MockUserRepository
 import de.place2be.domain.model.Review
 import de.place2be.domain.usecase.ReviewSubmissionCooldownPolicy
@@ -29,9 +30,10 @@ import java.util.UUID
  * Die fachliche Standort-/Mindestaufenthaltslogik bleibt in core.location
  * vorbereitet.
  *
- * Bookmarks werden über das UserRepository gespeichert. Nach jeder Änderung
- * wird derselbe lokale Datenstand erneut gelesen, sodass Herzsymbol und
- * „Gespeicherte Orte“-Liste ohne App-Neustart synchron bleiben.
+ * Bookmarks und Review-Reaktionen werden über Local-first-Repositories
+ * gespeichert. Nach jeder Änderung wird derselbe lokale Datenstand erneut
+ * gelesen, sodass Herz, Reaktionszustand, Zähler und Sortierung ohne App-Neustart
+ * synchron bleiben.
  */
 @Composable
 fun Place2BeApp() {
@@ -39,6 +41,9 @@ fun Place2BeApp() {
     val mockDataSource = remember(appContext) { MockPlaceDataSource.create(appContext) }
     val placeRepository = remember(mockDataSource) { MockPlaceRepository(mockDataSource) }
     val userRepository = remember(mockDataSource) { MockUserRepository(mockDataSource) }
+    val reviewReactionRepository = remember(appContext, placeRepository) {
+        MockReviewReactionRepository.create(appContext, placeRepository)
+    }
     val ratingViewModel = remember(placeRepository) { RatingViewModel(placeRepository) }
     val cooldownPolicy = remember { ReviewSubmissionCooldownPolicy() }
 
@@ -67,6 +72,13 @@ fun Place2BeApp() {
                 userRepository.getUser(userUuid)?.displayName ?: "Community-Mitglied"
             }
     }
+    val currentUserReactionTypes = remember(selectedReviews, reviewReactionRepository, dataRevision) {
+        selectedReviews.associate { review ->
+            review.uuid to reviewReactionRepository
+                .getReaction(review.uuid, DEMO_USER_UUID)
+                ?.type
+        }
+    }
     val submissionAvailability = remember(selectedReviews, dataRevision) {
         cooldownPolicy.evaluate(
             reviewsForPlace = selectedReviews,
@@ -79,6 +91,7 @@ fun Place2BeApp() {
         selectedPlaceUuid = selectedPlaceUuid,
         reviewsForSelectedPlace = selectedReviews,
         reviewAuthorNames = reviewAuthorNames,
+        currentUserReactionTypes = currentUserReactionTypes,
         currentUserUuid = DEMO_USER_UUID,
         ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
         onPlaceSelected = { selectedPlaceUuidString = it.toString() },
@@ -89,8 +102,15 @@ fun Place2BeApp() {
                 placeUuid = placeUuid,
                 bookmarked = bookmarked,
             )
-            // Aktualisiert Herzsymbol, gespeicherte Liste und Sortierreihenfolge
-            // unmittelbar aus der persistierten lokalen Datenquelle.
+            dataRevision++
+        },
+        onReviewReactionToggle = { reviewUuid, type ->
+            reviewReactionRepository.toggleReaction(
+                reviewUuid = reviewUuid,
+                userUuid = DEMO_USER_UUID,
+                type = type,
+            )
+            // Aktualisiert Zähler, Auswahlhervorhebung und Beliebt-Sortierung.
             dataRevision++
         },
         onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
@@ -102,8 +122,6 @@ fun Place2BeApp() {
                 accessibility = accessibility,
                 text = text,
             )
-            // Erzwingt eine neue Repository-Abfrage, damit Rezension, Cooldown
-            // und aktualisierte Kriterienwerte unmittelbar sichtbar werden.
             dataRevision++
         },
     )
