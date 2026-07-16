@@ -24,6 +24,14 @@ interface PlaceRepository {
 
     fun getReviewsForPlace(placeUuid: UUID): List<Review>
 
+    /**
+     * Vollständiger Review-Datenstand für fachliche Querschnittsberechnungen wie
+     * Nutzer-Score und Ortsaktivitäts-Normalisierung.
+     */
+    fun getReviews(): List<Review> = getPlaces()
+        .flatMap { place -> getReviewsForPlace(place.uuid) }
+        .distinctBy(Review::uuid)
+
     fun addReview(review: Review)
 
     /** Siehe [getReview]; Standardimplementierungen sind zunächst read-only. */

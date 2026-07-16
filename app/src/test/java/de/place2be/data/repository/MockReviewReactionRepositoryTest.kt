@@ -50,11 +50,12 @@ class MockReviewReactionRepositoryTest {
     }
 
     @Test
-    fun `switching from like to dislike updates both counters`() {
-        repository.toggleReaction(REVIEW_UUID, CURRENT_USER_UUID, ReviewReactionType.LIKE)
+    fun `switching from like to dislike updates counters but preserves activity timestamp`() {
+        val created = repository.toggleReaction(REVIEW_UUID, CURRENT_USER_UUID, ReviewReactionType.LIKE)
         val switched = repository.toggleReaction(REVIEW_UUID, CURRENT_USER_UUID, ReviewReactionType.DISLIKE)
 
         assertEquals(ReviewReactionType.DISLIKE, switched?.type)
+        assertEquals(created?.createdAtMillis, switched?.createdAtMillis)
         assertEquals(4, placeRepository.currentReview.likes)
         assertEquals(2, placeRepository.currentReview.dislikes)
         assertEquals(1, repository.getReactionsForUser(CURRENT_USER_UUID).size)

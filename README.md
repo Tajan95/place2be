@@ -27,7 +27,7 @@ Im MVP konzentriert sich place2be auf:
 - optionale bzw. ergänzende Textrezensionen als MVP-Bestandteil
 - dynamischer Score durch Community-Feedback
 - stärkere Gewichtung aktueller Bewertungen gegenüber älteren Bewertungen
-- Likes/Dislikes auf Reviews, mindestens zunächst über Mock-Daten
+- accountgebundene Likes/Dislikes auf Textrezensionen
 - Profilseite mit Nutzer-Score als Aktivitäts- und Reputationssignal
 - Tags/Ortseigenschaften wie Sitzmöglichkeiten, Schatten, Barrierefreiheit oder öffentliche Toiletten
 - lokale/prototypische Datenhaltung mit sauberer Architektur für spätere Backend-Anbindung
@@ -39,7 +39,7 @@ Im MVP konzentriert sich place2be auf:
 - echte Kartenintegration
 - komplexere Filteransicht nach Tags
 - Einstellungen im Nutzerprofil
-- ausgefeilte Normalisierung des Nutzer-Scores gegen Score-Farming
+- weitere Feinjustierung der Nutzer-Score-Konstanten anhand realer Nutzungsdaten
 - Ranglisten oder Vergleich mit Kontakten
 - neue Orte vorschlagen
 - zentrale Datenbank / Backend / Firebase / REST-API
@@ -61,7 +61,7 @@ Das Ranking eines Ortes basiert auf dem Feedback der Community. Positive Bewertu
 
 Damit das Ranking aktuell bleibt, wird das Bewertungsalter berücksichtigt: Neuere Bewertungen zählen stärker als ältere Bewertungen. Dadurch können Orte, die sich verschlechtern, im Ranking fallen, während ehemals schlecht bewertete Orte durch neue positive Rückmeldungen wieder steigen können.
 
-Zusätzlich soll ein Nutzer-Score Aktivität und Reputation abbilden. Punkte können z. B. durch Bewertungen, Textrezensionen und Likes auf eigene Rezensionen entstehen. Die genaue Normalisierung ist noch offen, damit stark frequentierte Orte nicht zu einfach für Score-Farming genutzt werden können.
+Der Nutzer-Score wird dynamisch aus Aktivität und Reputation berechnet. Neue bewertete Orte geben einen abnehmenden Erkundungsbonus; nahe Ortscluster, häufig wiederholte Besuche und massenhafte Reaktionen werden gedeckelt. Hilfreiche eigene Textrezensionen erzeugen über Netto-Reaktionen logarithmisch wachsende Reputationspunkte, wobei die Aktivität des Ortes normalisiert und jede Rezension auf maximal zehn Reputationspunkte begrenzt wird.
 
 ## Datenschutz-Hinweis zum Profil
 
@@ -81,7 +81,7 @@ Die App ist MVVM- und Feature-orientiert strukturiert:
 - `data/mock` und `data/repository` für lokale Datenquellen und Implementierungen
 - `core` für übergreifende technische Hilfsstrukturen
 
-Die Score-Logik liegt bewusst nicht in der UI, sondern in `domain/usecase/CalculatePlaceScoreUseCase.kt`.
+Die Score-Logik liegt bewusst nicht in der UI, sondern in `domain/usecase/CalculatePlaceScoreUseCase.kt` und `domain/usecase/CalculateUserScoreUseCase.kt`.
 
 ## Technologie
 
@@ -96,6 +96,7 @@ Die Score-Logik liegt bewusst nicht in der UI, sondern in `domain/usecase/Calcul
 Weitere Projektdokumentation befindet sich im Ordner [`docs`](docs/):
 
 - [`docs/architekturentscheidungen.md`](docs/architekturentscheidungen.md)
+- [`docs/nutzer-score-regeln.md`](docs/nutzer-score-regeln.md)
 - [`docs/lasten-pflichtenheft.md`](docs/lasten-pflichtenheft.md)
 - [`docs/meeting-notes-2026-07-12.md`](docs/meeting-notes-2026-07-12.md)
 - [`docs/mockup-notes-2026-07-12.md`](docs/mockup-notes-2026-07-12.md)
