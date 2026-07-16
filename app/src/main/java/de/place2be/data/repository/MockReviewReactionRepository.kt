@@ -105,7 +105,7 @@ class MockReviewReactionRepository private constructor(
 
     private fun writeReactionsUnlocked(reactions: List<ReviewReaction>) {
         reactionsFile.writeText(
-            gson.toJson(reactions.map(ReviewReactionJson::from)),
+            gson.toJson(reactions.map { ReviewReactionJson.from(it) }),
             Charsets.UTF_8,
         )
     }
