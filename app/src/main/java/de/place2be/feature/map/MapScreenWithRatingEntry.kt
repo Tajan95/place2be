@@ -69,6 +69,10 @@ import kotlin.math.ln
  * Erst nach dem Hochziehen erscheinen Schnellbewertung, optionales Textfeld und
  * bestehende Rezensionen. Damit gibt es keinen konkurrierenden zweiten Button
  * und keine separate Bewertungsseite im regulären App-Flow.
+ *
+ * Das Herz in der Ortszusammenfassung ist eine echte Bookmark-Aktion. Der
+ * persistierte Zustand wird von der App-Schicht erneut eingelesen und bleibt so
+ * mit dem Dashboard-Shortcut „Gespeichert“ synchron.
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,6 +85,7 @@ fun MapScreenWithRatingEntry(
     ratingCooldownRemainingMillis: Long,
     onPlaceSelected: (UUID) -> Unit,
     onSelectionCleared: () -> Unit,
+    onBookmarkToggle: (placeUuid: UUID, bookmarked: Boolean) -> Unit,
     onSubmitRating: (
         placeUuid: UUID,
         vibe: Int,
@@ -137,6 +142,7 @@ fun MapScreenWithRatingEntry(
                     cooldownRemainingMillis = ratingCooldownRemainingMillis,
                     scrollState = detailScrollState,
                     onClose = onSelectionCleared,
+                    onBookmarkToggle = onBookmarkToggle,
                     onSubmitRating = onSubmitRating,
                 )
             }
@@ -164,6 +170,7 @@ private fun InlinePlaceDetailSheet(
     cooldownRemainingMillis: Long,
     scrollState: ScrollState,
     onClose: () -> Unit,
+    onBookmarkToggle: (UUID, Boolean) -> Unit,
     onSubmitRating: (UUID, Int, Int, Int, String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -214,7 +221,10 @@ private fun InlinePlaceDetailSheet(
             )
         }
 
-        PlaceSummary(place)
+        PlaceSummary(
+            place = place,
+            onBookmarkToggle = onBookmarkToggle,
+        )
         Spacer(Modifier.height(12.dp))
         AggregatedRatings(place)
         Spacer(Modifier.height(10.dp))
@@ -442,7 +452,10 @@ private fun InlinePlaceDetailSheet(
 }
 
 @Composable
-private fun PlaceSummary(place: MapPlaceUiState) {
+private fun PlaceSummary(
+    place: MapPlaceUiState,
+    onBookmarkToggle: (UUID, Boolean) -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -487,12 +500,19 @@ private fun PlaceSummary(place: MapPlaceUiState) {
                 maxLines = 1,
             )
         }
-        Text(
-            text = if (place.isBookmarked) "♥" else "♡",
-            color = Moss,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(start = 8.dp),
-        )
+        Surface(
+            onClick = { onBookmarkToggle(place.uuid, !place.isBookmarked) },
+            modifier = Modifier.padding(start = 4.dp),
+            shape = RoundedCornerShape(50),
+            color = Color.Transparent,
+            contentColor = Moss,
+        ) {
+            Text(
+                text = if (place.isBookmarked) "♥" else "♡",
+                fontSize = 25.sp,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
     }
 }
 
