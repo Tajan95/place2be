@@ -7,6 +7,10 @@ import java.util.UUID
  *
  * Für den local-first-Prototyp reicht ein einfacher Demo-User. Ein echtes
  * Authentifizierungs- oder Profil-System ist nicht Teil des MVP.
+ *
+ * `userScore` bleibt vorläufig als Seed-/Kompatibilitätsfeld erhalten. Der in
+ * der App angezeigte Score wird jedoch dynamisch durch
+ * `CalculateUserScoreUseCase` aus Bewertungen und Reaktionen berechnet.
  */
 data class User(
     val uuid: UUID = UUID.randomUUID(),
