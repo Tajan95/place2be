@@ -86,21 +86,35 @@ Die Bewertung ist im regulären App-Flow **keine separate Vollbildseite**. Im ko
 
 ## ADR-009: Profil, Nutzer-Score und Review-Reaktionen als MVP-nahe Bestandteile
 
-**Status:** entschieden / teilweise noch zu konkretisieren
+**Status:** entschieden; Profil-UI noch umzusetzen
 
-Profilseite, Nutzer-Score, Textrezensionen, Likes/Dislikes und Bookmarks sind nach den Mockup-Notizen MVP-relevant oder mindestens MVP-nah vorzubereiten. Der Nutzer-Score soll Aktivität und Reputation abbilden.
+Profilseite, Nutzer-Score, Textrezensionen, Likes/Dislikes und Bookmarks sind nach den Mockup-Notizen MVP-relevant oder mindestens MVP-nah vorzubereiten. Der Nutzer-Score bildet Aktivität und Reputation getrennt ab und wird dynamisch aus dem aktuellen lokalen Datenstand berechnet. Die Regeln zur Normalisierung und Begrenzung gegen Score-Farming sind in `docs/nutzer-score-regeln.md` dokumentiert.
 
-**Offen:** Die genaue Normalisierung des Nutzer-Scores und die öffentliche Sichtbarkeit der Bewertungs-Historie müssen noch entschieden werden.
+Die öffentliche Sichtbarkeit der Bewertungs-Historie ist in ADR-010 verbindlich festgelegt.
 
-**Konsequenz:** Diese Konzepte werden in Issues und Dokumentation aufgenommen, können aber bei Zeitmangel zunächst mit Mock-Daten oder vereinfachter Logik demonstriert werden.
+**Konsequenz:** Issue #15 setzt die Profiloberfläche auf Basis der bereits vorhandenen Score- und Repository-Strukturen um. Eigene und fremde Profilansichten müssen dabei fachlich unterscheidbar bleiben.
 
-## ADR-010: Datenschutzbewusste Profilansicht
+## ADR-010: Datenschutzbewusste Trennung zwischen eigenem und öffentlichem Profil
 
-**Status:** offen / zu entscheiden
+**Status:** entschieden für den Local-first-MVP
 
-Die eigene Bewertungs-Historie kann für den Nutzer selbst hilfreich sein. Eine vollständig öffentliche Historie könnte aber Rückschlüsse auf Identität, Bewegungsmuster oder häufig besuchte Orte erlauben.
+Die vollständige Bewertungs- und Rezensionshistorie ist ausschließlich im **eigenen Profil** sichtbar. Dort darf der angemeldete Nutzer seine eigenen Einträge mit Ort, Datum, numerischen Kriterien und vorhandenem Rezensionstext nachvollziehen. Diese Ansicht dient als private persönliche Historie und wird nicht als öffentliches Aktivitätsprotokoll angeboten.
 
-**Konsequenz:** Es muss entschieden werden, ob fremde Nutzer nur aggregierte Profilinformationen sehen, während die vollständige Historie privat bleibt.
+Ein **fremdes öffentliches Profil** zeigt ausschließlich aggregierte Informationen:
+
+- Pseudonym und neutrales Profil-Icon,
+- Gesamt-Score,
+- Aktivitäts- und Reputationspunkte,
+- Anzahl abgegebener Bewertungen bzw. Textrezensionen,
+- aggregierte Anzahl hilfreicher positiver Reaktionen.
+
+Eine chronologische Liste besuchter oder bewerteter Orte wird fremden Nutzern nicht angezeigt. Einzelne Rezensionen bleiben weiterhin beim jeweils bewerteten Ort sichtbar, werden aber im öffentlichen Profil nicht zu einer nutzerbezogenen Orts- oder Bewegungschronologie zusammengeführt.
+
+Einstellungen, Hilfe und die vollständige eigene Historie sind nur im eigenen Profil erreichbar. Die UI soll deshalb zwischen `OWN` und `PUBLIC` beziehungsweise einer vergleichbaren Profilansicht unterscheiden können, auch wenn der Local-first-MVP zunächst nur den Demo-Nutzer vollständig interaktiv zeigt.
+
+**Datenschutz- und Sicherheitsbegründung:** Eine öffentliche vollständige Historie könnte durch Zeitstempel, wiederkehrende Orte und Bewertungsmuster Rückschlüsse auf Wohnort, Routinen, Aufenthaltszeiten, soziale Gewohnheiten oder die Identität einer Person ermöglichen. Die Trennung folgt dem Prinzip der Datenminimierung: Öffentlich werden nur die für Reputation und Community-Vertrauen erforderlichen aggregierten Werte dargestellt.
+
+**Konsequenz:** Issue #15 implementiert die private eigene Profilansicht und bereitet eine begrenzte öffentliche Variante strukturell vor. Eine spätere Backend- oder Kontenlösung darf die öffentliche Historie nicht allein deshalb erweitern, weil mehr Daten technisch verfügbar sind; für zusätzliche Sichtbarkeit wäre eine neue bewusste Datenschutzentscheidung erforderlich.
 
 ## ADR-011: Gespeicherte Rezensionen werden direkt in der Detailansicht sichtbar
 
@@ -152,4 +166,4 @@ Die vorhandenen Like-/Dislike-Werte der Seed-Reviews repräsentieren einen berei
 
 **Begründung:** Eine reine Änderung an zwei Zählerfeldern würde Mehrfach-Reaktionen desselben Accounts erlauben und könnte später nicht sauber für Reputation oder Moderation ausgewertet werden. Der explizite Reaktionsdatensatz schafft die notwendige Nachvollziehbarkeit und verhindert einen einfachen Score-Maximierungsweg über eigene Rezensionen.
 
-**Konsequenz:** Der aktuelle Reaktionszustand wird in der UI hervorgehoben, bleibt nach einem App-Neustart erhalten und beeinflusst unmittelbar die Sortierung `Beliebt`. Für Issue #16 ist vorbereitet, dass erhaltene Likes auf eigene Rezensionen stärker zur Reputation beitragen können als das aktive Bewerten fremder Rezensionen. Die genaue Normalisierung und Gewichtung des Nutzer-Scores bleibt dort zu entscheiden.
+**Konsequenz:** Der aktuelle Reaktionszustand wird in der UI hervorgehoben, bleibt nach einem App-Neustart erhalten und beeinflusst unmittelbar die Sortierung `Beliebt`. Die Reaktionsdaten fließen außerdem in die mit Issue #16 umgesetzte dynamische Berechnung von Aktivitäts- und Reputationspunkten ein.
