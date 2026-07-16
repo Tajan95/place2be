@@ -2,6 +2,7 @@ package de.place2be.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -89,27 +90,6 @@ fun Place2BeApp() {
         )
     }
     val places = remember(mapViewModel, dataRevision) { mapViewModel.getMapItems() }
-    val allDomainPlaces = remember(placeRepository, dataRevision) { placeRepository.getPlaces() }
-    val allReviews = remember(placeRepository, dataRevision) { placeRepository.getReviews() }
-    val currentUserReactions = remember(reviewReactionRepository, dataRevision) {
-        reviewReactionRepository.getReactionsForUser(DEMO_USER_UUID)
-    }
-    val userScoreResult = remember(
-        allDomainPlaces,
-        allReviews,
-        currentUserReactions,
-        calculateUserScoreUseCase,
-    ) {
-        calculateUserScoreUseCase.calculate(
-            userUuid = DEMO_USER_UUID,
-            places = allDomainPlaces,
-            reviews = allReviews,
-            reactions = currentUserReactions,
-        )
-    }
-    val currentUser = remember(userRepository, dataRevision) {
-        userRepository.getUser(DEMO_USER_UUID)
-    }
     val profileUiState = remember(profileViewModel, dataRevision) {
         profileViewModel.getProfile(
             profileUserUuid = DEMO_USER_UUID,
@@ -192,13 +172,7 @@ fun Place2BeApp() {
                 )
 
                 ProfileEntryButton(
-                    initial = currentUser?.displayName
-                        ?.trim()
-                        ?.firstOrNull()
-                        ?.uppercaseChar()
-                        ?.toString()
-                        ?: "?",
-                    totalScore = userScoreResult.totalScore,
+                    initial = profileUiState?.profileInitial ?: "?",
                     onClick = { destinationName = AppDestination.PROFILE.name },
                 )
             }
@@ -225,9 +199,8 @@ fun Place2BeApp() {
  * einen klaren Profilzugang ohne zusätzliches Einstellungs-Zahnrad.
  */
 @Composable
-private fun ProfileEntryButton(
+private fun BoxScope.ProfileEntryButton(
     initial: String,
-    totalScore: Int,
     onClick: () -> Unit,
 ) {
     Surface(
