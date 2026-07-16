@@ -63,16 +63,17 @@ class MockReviewReactionRepository private constructor(
             it.reviewUuid == reviewUuid && it.userUuid == userUuid
         }
         val existing = reactions.getOrNull(existingIndex)
-        val nowMillis = System.currentTimeMillis()
         val nextReaction = when {
             existing == null -> ReviewReaction(
                 reviewUuid = reviewUuid,
                 userUuid = userUuid,
                 type = type,
-                createdAtMillis = nowMillis,
+                createdAtMillis = System.currentTimeMillis(),
             )
             existing.type == type -> null
-            else -> existing.copy(type = type, createdAtMillis = nowMillis)
+            // Ein Wechsel ist keine neue Aktivität. Der ursprüngliche Zeitstempel
+            // bleibt erhalten, damit Like/Dislike-Wechsel keine Tagespunkte farmen.
+            else -> existing.copy(type = type)
         }
 
         val updatedReview = review.withReactionTransition(
