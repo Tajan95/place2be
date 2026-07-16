@@ -28,6 +28,10 @@ import java.util.UUID
  * 24-Stunden-Sperre wird anhand der tatsächlich gespeicherten Reviews geprüft.
  * Die fachliche Standort-/Mindestaufenthaltslogik bleibt in core.location
  * vorbereitet.
+ *
+ * Bookmarks werden über das UserRepository gespeichert. Nach jeder Änderung
+ * wird derselbe lokale Datenstand erneut gelesen, sodass Herzsymbol und
+ * „Gespeicherte Orte“-Liste ohne App-Neustart synchron bleiben.
  */
 @Composable
 fun Place2BeApp() {
@@ -79,6 +83,16 @@ fun Place2BeApp() {
         ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
         onPlaceSelected = { selectedPlaceUuidString = it.toString() },
         onSelectionCleared = { selectedPlaceUuidString = null },
+        onBookmarkToggle = { placeUuid, bookmarked ->
+            userRepository.setBookmarked(
+                userUuid = DEMO_USER_UUID,
+                placeUuid = placeUuid,
+                bookmarked = bookmarked,
+            )
+            // Aktualisiert Herzsymbol, gespeicherte Liste und Sortierreihenfolge
+            // unmittelbar aus der persistierten lokalen Datenquelle.
+            dataRevision++
+        },
         onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
             ratingViewModel.submitRating(
                 placeUuid = placeUuid,
