@@ -13,6 +13,7 @@ import de.place2be.data.repository.MockPlaceRepository
 import de.place2be.data.repository.MockReviewReactionRepository
 import de.place2be.data.repository.MockUserRepository
 import de.place2be.domain.model.Review
+import de.place2be.domain.usecase.CalculateUserScoreUseCase
 import de.place2be.domain.usecase.ReviewSubmissionCooldownPolicy
 import de.place2be.feature.map.MapScreenWithRatingEntry
 import de.place2be.feature.map.MapViewModel
@@ -32,8 +33,8 @@ import java.util.UUID
  *
  * Bookmarks und Review-Reaktionen werden über Local-first-Repositories
  * gespeichert. Nach jeder Änderung wird derselbe lokale Datenstand erneut
- * gelesen, sodass Herz, Reaktionszustand, Zähler und Sortierung ohne App-Neustart
- * synchron bleiben.
+ * gelesen. Der Nutzer-Score wird daraus dynamisch neu berechnet, statt als
+ * dauerhaft inkrementierter Wert gespeichert zu werden.
  */
 @Composable
 fun Place2BeApp() {
@@ -46,6 +47,7 @@ fun Place2BeApp() {
     }
     val ratingViewModel = remember(placeRepository) { RatingViewModel(placeRepository) }
     val cooldownPolicy = remember { ReviewSubmissionCooldownPolicy() }
+    val calculateUserScoreUseCase = remember { CalculateUserScoreUseCase() }
 
     var dataRevision by rememberSaveable { mutableStateOf(0) }
     var selectedPlaceUuidString by rememberSaveable { mutableStateOf<String?>(null) }
@@ -60,6 +62,25 @@ fun Place2BeApp() {
         )
     }
     val places = remember(mapViewModel, dataRevision) { mapViewModel.getMapItems() }
+    val allDomainPlaces = remember(placeRepository, dataRevision) { placeRepository.getPlaces() }
+    val allReviews = remember(placeRepository, dataRevision) { placeRepository.getReviews() }
+    val currentUserReactions = remember(reviewReactionRepository, dataRevision) {
+        reviewReactionRepository.getReactionsForUser(DEMO_USER_UUID)
+    }
+    val userScoreResult = remember(
+        allDomainPlaces,
+        allReviews,
+        currentUserReactions,
+        calculateUserScoreUseCase,
+    ) {
+        calculateUserScoreUseCase.calculate(
+            userUuid = DEMO_USER_UUID,
+            places = allDomainPlaces,
+            reviews = allReviews,
+            reactions = currentUserReactions,
+        )
+    }
+
     val selectedPlaceUuid = selectedPlaceUuidString?.let(UUID::fromString)
     val selectedReviews = remember(selectedPlaceUuid, dataRevision) {
         selectedPlaceUuid?.let(placeRepository::getReviewsForPlace).orEmpty()
@@ -88,6 +109,7 @@ fun Place2BeApp() {
 
     MapScreenWithRatingEntry(
         places = places,
+        currentUserScore = userScoreResult.totalScore,
         selectedPlaceUuid = selectedPlaceUuid,
         reviewsForSelectedPlace = selectedReviews,
         reviewAuthorNames = reviewAuthorNames,
@@ -110,7 +132,7 @@ fun Place2BeApp() {
                 userUuid = DEMO_USER_UUID,
                 type = type,
             )
-            // Aktualisiert Zähler, Auswahlhervorhebung und Beliebt-Sortierung.
+            // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
             dataRevision++
         },
         onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
@@ -122,6 +144,7 @@ fun Place2BeApp() {
                 accessibility = accessibility,
                 text = text,
             )
+            // Bewertungs-, Textbonus- und Reputationsbasis werden neu berechnet.
             dataRevision++
         },
     )
