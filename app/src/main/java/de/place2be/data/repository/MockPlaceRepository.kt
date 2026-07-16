@@ -14,10 +14,15 @@ class MockPlaceRepository(
 
     override fun getPlace(placeUuid: UUID): Place? = dataSource.getPlace(placeUuid)
 
+    override fun getReview(reviewUuid: UUID): Review? =
+        dataSource.getReviews().firstOrNull { it.uuid == reviewUuid }
+
     override fun getReviewsForPlace(placeUuid: UUID): List<Review> =
         dataSource.getReviewsForPlace(placeUuid)
 
     override fun addReview(review: Review) {
         dataSource.createReview(review)
     }
+
+    override fun updateReview(review: Review): Boolean = dataSource.updateReview(review)
 }
