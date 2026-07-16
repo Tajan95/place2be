@@ -55,7 +55,7 @@ class ProfileViewModelTest {
         assertEquals("M", profile.profileInitial)
         assertEquals(2, profile.reviewCount)
         assertEquals(1, profile.textReviewCount)
-        assertEquals(6, profile.helpfulReactionCount)
+        assertEquals(9, profile.helpfulReactionCount)
         assertEquals(listOf(NEWER_REVIEW_UUID, OLDER_REVIEW_UUID), profile.history.map { it.reviewUuid })
         assertEquals("Mainufer", profile.history.first().placeName)
         assertEquals("Bethmannpark", profile.history.last().placeName)
@@ -97,7 +97,7 @@ class ProfileViewModelTest {
         assertEquals(ProfileViewMode.PUBLIC, profile.viewMode)
         assertEquals(2, profile.reviewCount)
         assertEquals(1, profile.textReviewCount)
-        assertEquals(12, profile.helpfulReactionCount)
+        assertEquals(15, profile.helpfulReactionCount)
         assertTrue(profile.history.isEmpty())
         assertTrue(profile.score.totalScore >= 0)
     }
