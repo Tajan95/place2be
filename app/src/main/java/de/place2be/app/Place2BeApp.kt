@@ -1,12 +1,23 @@
 package de.place2be.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.place2be.core.location.LocationConfirmationState
 import de.place2be.data.mock.MockPlaceDataSource
 import de.place2be.data.repository.MockPlaceRepository
@@ -18,6 +29,8 @@ import de.place2be.domain.usecase.ReviewSubmissionCooldownPolicy
 import de.place2be.feature.map.MapScreenWithRatingEntry
 import de.place2be.feature.map.MapViewModel
 import de.place2be.feature.rating.RatingViewModel
+import de.place2be.ui.theme.LeafSurface
+import de.place2be.ui.theme.Moss
 import java.util.UUID
 
 /**
@@ -107,47 +120,67 @@ fun Place2BeApp() {
         )
     }
 
-    MapScreenWithRatingEntry(
-        places = places,
-        currentUserScore = userScoreResult.totalScore,
-        selectedPlaceUuid = selectedPlaceUuid,
-        reviewsForSelectedPlace = selectedReviews,
-        reviewAuthorNames = reviewAuthorNames,
-        currentUserReactionTypes = currentUserReactionTypes,
-        currentUserUuid = DEMO_USER_UUID,
-        ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
-        onPlaceSelected = { selectedPlaceUuidString = it.toString() },
-        onSelectionCleared = { selectedPlaceUuidString = null },
-        onBookmarkToggle = { placeUuid, bookmarked ->
-            userRepository.setBookmarked(
-                userUuid = DEMO_USER_UUID,
-                placeUuid = placeUuid,
-                bookmarked = bookmarked,
+    Box {
+        MapScreenWithRatingEntry(
+            places = places,
+            selectedPlaceUuid = selectedPlaceUuid,
+            reviewsForSelectedPlace = selectedReviews,
+            reviewAuthorNames = reviewAuthorNames,
+            currentUserReactionTypes = currentUserReactionTypes,
+            currentUserUuid = DEMO_USER_UUID,
+            ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
+            onPlaceSelected = { selectedPlaceUuidString = it.toString() },
+            onSelectionCleared = { selectedPlaceUuidString = null },
+            onBookmarkToggle = { placeUuid, bookmarked ->
+                userRepository.setBookmarked(
+                    userUuid = DEMO_USER_UUID,
+                    placeUuid = placeUuid,
+                    bookmarked = bookmarked,
+                )
+                dataRevision++
+            },
+            onReviewReactionToggle = { reviewUuid, type ->
+                reviewReactionRepository.toggleReaction(
+                    reviewUuid = reviewUuid,
+                    userUuid = DEMO_USER_UUID,
+                    type = type,
+                )
+                // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
+                dataRevision++
+            },
+            onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
+                ratingViewModel.submitRating(
+                    placeUuid = placeUuid,
+                    userUuid = DEMO_USER_UUID,
+                    vibe = vibe,
+                    safety = safety,
+                    accessibility = accessibility,
+                    text = text,
+                )
+                // Bewertungs-, Textbonus- und Reputationsbasis werden neu berechnet.
+                dataRevision++
+            },
+        )
+
+        // Vorläufige MVP-Anzeige. Issue #15 übernimmt später die ausführliche
+        // Profilansicht mit Aufteilung in Aktivität und Reputation.
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 28.dp, end = 78.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = LeafSurface,
+            contentColor = Moss,
+        ) {
+            Text(
+                text = "Score ${userScoreResult.totalScore}",
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
             )
-            dataRevision++
-        },
-        onReviewReactionToggle = { reviewUuid, type ->
-            reviewReactionRepository.toggleReaction(
-                reviewUuid = reviewUuid,
-                userUuid = DEMO_USER_UUID,
-                type = type,
-            )
-            // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
-            dataRevision++
-        },
-        onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
-            ratingViewModel.submitRating(
-                placeUuid = placeUuid,
-                userUuid = DEMO_USER_UUID,
-                vibe = vibe,
-                safety = safety,
-                accessibility = accessibility,
-                text = text,
-            )
-            // Bewertungs-, Textbonus- und Reputationsbasis werden neu berechnet.
-            dataRevision++
-        },
-    )
+        }
+    }
 }
 
 private val DEMO_USER_UUID: UUID = UUID.fromString("f5257520-3685-4a1a-be5b-4a0ceb1baba7")
