@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.place2be.domain.model.Review
+import de.place2be.domain.model.ReviewReactionType
 import de.place2be.feature.rating.RatingUiState
 import de.place2be.ui.component.RatingCriterion
 import de.place2be.ui.component.RatingCriterionIcon
@@ -73,6 +74,9 @@ import kotlin.math.ln
  * Das Herz in der Ortszusammenfassung ist eine echte Bookmark-Aktion. Der
  * persistierte Zustand wird von der App-Schicht erneut eingelesen und bleibt so
  * mit dem Dashboard-Shortcut „Gespeichert“ synchron.
+ *
+ * Review-Reaktionen sind accountgebunden. Die aktuell gewählte Reaktion wird
+ * visuell hervorgehoben; eigene Rezensionen bleiben bewusst nicht bewertbar.
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,11 +85,13 @@ fun MapScreenWithRatingEntry(
     selectedPlaceUuid: UUID?,
     reviewsForSelectedPlace: List<Review>,
     reviewAuthorNames: Map<UUID, String>,
+    currentUserReactionTypes: Map<UUID, ReviewReactionType?>,
     currentUserUuid: UUID,
     ratingCooldownRemainingMillis: Long,
     onPlaceSelected: (UUID) -> Unit,
     onSelectionCleared: () -> Unit,
     onBookmarkToggle: (placeUuid: UUID, bookmarked: Boolean) -> Unit,
+    onReviewReactionToggle: (reviewUuid: UUID, type: ReviewReactionType) -> Unit,
     onSubmitRating: (
         placeUuid: UUID,
         vibe: Int,
@@ -108,8 +114,6 @@ fun MapScreenWithRatingEntry(
         if (selectedPlaceUuid != null) sheetState.partialExpand()
     }
 
-    // Nach dem Zurückschieben in den Peek-Zustand soll wieder der Kopfbereich
-    // sichtbar sein – nicht die zuletzt gelesene Rezension weiter unten.
     LaunchedEffect(sheetState.currentValue, selectedPlaceUuid) {
         if (selectedPlaceUuid != null && sheetState.currentValue == SheetValue.PartiallyExpanded) {
             detailScrollState.scrollTo(0)
@@ -138,19 +142,18 @@ fun MapScreenWithRatingEntry(
                     place = selectedPlace,
                     reviews = reviewsForSelectedPlace,
                     reviewAuthorNames = reviewAuthorNames,
+                    currentUserReactionTypes = currentUserReactionTypes,
                     currentUserUuid = currentUserUuid,
                     cooldownRemainingMillis = ratingCooldownRemainingMillis,
                     scrollState = detailScrollState,
                     onClose = onSelectionCleared,
                     onBookmarkToggle = onBookmarkToggle,
+                    onReviewReactionToggle = onReviewReactionToggle,
                     onSubmitRating = onSubmitRating,
                 )
             }
         },
     ) { _ ->
-        // Die ursprüngliche Dashboard-Map bleibt unangetastet. Ihre eigene
-        // Orts-Preview wird hier deaktiviert, weil die äußere Sheet-Schicht die
-        // ausgewählte Ortsansicht vollständig übernimmt.
         MapScreen(
             places = places,
             selectedPlaceUuid = null,
@@ -166,11 +169,13 @@ private fun InlinePlaceDetailSheet(
     place: MapPlaceUiState,
     reviews: List<Review>,
     reviewAuthorNames: Map<UUID, String>,
+    currentUserReactionTypes: Map<UUID, ReviewReactionType?>,
     currentUserUuid: UUID,
     cooldownRemainingMillis: Long,
     scrollState: ScrollState,
     onClose: () -> Unit,
     onBookmarkToggle: (UUID, Boolean) -> Unit,
+    onReviewReactionToggle: (UUID, ReviewReactionType) -> Unit,
     onSubmitRating: (UUID, Int, Int, Int, String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -239,8 +244,6 @@ private fun InlinePlaceDetailSheet(
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
 
-        // Alles ab hier liegt unterhalb des Peek-Bereichs und wird erst beim
-        // Hochziehen zur Detailansicht sichtbar.
         Spacer(Modifier.height(22.dp))
         Text(
             text = recentReviewCountLabel(place.recentReviewCount),
@@ -444,6 +447,8 @@ private fun InlinePlaceDetailSheet(
                     review = review,
                     authorName = reviewAuthorNames[review.userUuid] ?: "Community-Mitglied",
                     isOwnReview = review.userUuid == currentUserUuid,
+                    currentReaction = currentUserReactionTypes[review.uuid],
+                    onReactionToggle = { type -> onReviewReactionToggle(review.uuid, type) },
                 )
                 Spacer(Modifier.height(10.dp))
             }
@@ -677,6 +682,8 @@ private fun ReviewCard(
     review: Review,
     authorName: String,
     isOwnReview: Boolean,
+    currentReaction: ReviewReactionType?,
+    onReactionToggle: (ReviewReactionType) -> Unit,
 ) {
     var expanded by rememberSaveable(review.uuid.toString()) { mutableStateOf(false) }
     val reviewText = review.text.orEmpty()
@@ -728,12 +735,58 @@ private fun ReviewCard(
                 )
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = "👍 ${review.likes}   👎 ${review.dislikes}",
-                color = DarkInk.copy(alpha = 0.6f),
-                fontSize = 11.sp,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ReviewReactionButton(
+                    symbol = "👍",
+                    count = review.likes,
+                    selected = currentReaction == ReviewReactionType.LIKE,
+                    enabled = !isOwnReview,
+                    selectedColor = Moss,
+                    onClick = { onReactionToggle(ReviewReactionType.LIKE) },
+                )
+                Spacer(Modifier.width(8.dp))
+                ReviewReactionButton(
+                    symbol = "👎",
+                    count = review.dislikes,
+                    selected = currentReaction == ReviewReactionType.DISLIKE,
+                    enabled = !isOwnReview,
+                    selectedColor = AccessibilityGold,
+                    onClick = { onReactionToggle(ReviewReactionType.DISLIKE) },
+                )
+            }
+            if (isOwnReview) {
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    text = "Eigene Rezensionen können nicht bewertet werden.",
+                    color = DarkInk.copy(alpha = 0.48f),
+                    fontSize = 10.sp,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ReviewReactionButton(
+    symbol: String,
+    count: Int,
+    selected: Boolean,
+    enabled: Boolean,
+    selectedColor: Color,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) selectedColor.copy(alpha = 0.18f) else Color.Transparent,
+        contentColor = if (selected) selectedColor else DarkInk.copy(alpha = if (enabled) 0.65f else 0.35f),
+    ) {
+        Text(
+            text = "$symbol $count",
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+            fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+        )
     }
 }
 
