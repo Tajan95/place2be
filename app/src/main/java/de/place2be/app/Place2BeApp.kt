@@ -98,6 +98,12 @@ fun Place2BeApp() {
         )
     }
     val places = remember(mapViewModel, dataRevision) { mapViewModel.getMapItems() }
+    val ownProfileUiState = remember(profileViewModel, dataRevision) {
+        profileViewModel.getProfile(
+            profileUserUuid = DEMO_USER_UUID,
+            viewerUserUuid = DEMO_USER_UUID,
+        )
+    }
     val profileUiState = remember(profileViewModel, viewedProfileUserUuid, dataRevision) {
         profileViewModel.getProfile(
             profileUserUuid = viewedProfileUserUuid,
@@ -168,7 +174,7 @@ fun Place2BeApp() {
                 // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
                 dataRevision++
             },
-            onReviewAuthorSelected =(::openProfile),
+            onReviewAuthorSelected = { authorUuid -> openProfile(authorUuid) },
             onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
                 ratingViewModel.submitRating(
                     placeUuid = placeUuid,
@@ -185,10 +191,7 @@ fun Place2BeApp() {
 
         if (destination == AppDestination.MAP) {
             ProfileEntryButton(
-                initial = profileViewModel
-                    .getProfile(DEMO_USER_UUID, DEMO_USER_UUID)
-                    ?.profileInitial
-                    ?: "?",
+                initial = ownProfileUiState?.profileInitial ?: "?",
                 onClick = { openProfile(DEMO_USER_UUID) },
             )
         }
