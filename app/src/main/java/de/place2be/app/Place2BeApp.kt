@@ -45,9 +45,11 @@ import java.util.UUID
 /**
  * Zentrale App-Composable für den MVP-Demo-Flow.
  *
- * Map, erweiterbare Ortsdetails und Bewertung bleiben der primäre Flow. Das
- * Profil ist über den bestehenden Nutzerkreis im Dashboard erreichbar und zeigt
- * den dynamischen Nutzer-Score sowie die private Bewertungs-Historie.
+ * Map, erweiterbare Ortsdetails und Bewertung bleiben dauerhaft komponiert. Die
+ * Profilansicht wird darübergelegt, damit bei einem kurzen Wechsel zum Autorprofil
+ * der ausgewählte Ort, das geöffnete Bottom-Sheet und dessen Scrollkontext erhalten
+ * bleiben. Die betrachtete Profil-UUID entscheidet zusammen mit der Demo-Nutzer-UUID,
+ * ob ProfileViewModel eine private OWN- oder begrenzte PUBLIC-Ansicht liefert.
  */
 @Composable
 fun Place2BeApp() {
@@ -78,7 +80,13 @@ fun Place2BeApp() {
     var dataRevision by rememberSaveable { mutableStateOf(0) }
     var selectedPlaceUuidString by rememberSaveable { mutableStateOf<String?>(null) }
     var destinationName by rememberSaveable { mutableStateOf(AppDestination.MAP.name) }
+    var viewedProfileUserUuidString by rememberSaveable {
+        mutableStateOf(DEMO_USER_UUID.toString())
+    }
     val destination = AppDestination.valueOf(destinationName)
+    val viewedProfileUserUuid = runCatching {
+        UUID.fromString(viewedProfileUserUuidString)
+    }.getOrDefault(DEMO_USER_UUID)
 
     val mapViewModel = remember(placeRepository, userRepository, dataRevision) {
         MapViewModel(
@@ -90,9 +98,9 @@ fun Place2BeApp() {
         )
     }
     val places = remember(mapViewModel, dataRevision) { mapViewModel.getMapItems() }
-    val profileUiState = remember(profileViewModel, dataRevision) {
+    val profileUiState = remember(profileViewModel, viewedProfileUserUuid, dataRevision) {
         profileViewModel.getProfile(
-            profileUserUuid = DEMO_USER_UUID,
+            profileUserUuid = viewedProfileUserUuid,
             viewerUserUuid = DEMO_USER_UUID,
         )
     }
@@ -123,62 +131,69 @@ fun Place2BeApp() {
         )
     }
 
+    fun openProfile(userUuid: UUID) {
+        viewedProfileUserUuidString = userUuid.toString()
+        destinationName = AppDestination.PROFILE.name
+    }
+
     BackHandler(enabled = destination == AppDestination.PROFILE) {
         destinationName = AppDestination.MAP.name
     }
 
-    when (destination) {
-        AppDestination.MAP -> {
-            Box(modifier = Modifier.fillMaxSize()) {
-                MapScreenWithRatingEntry(
-                    places = places,
-                    selectedPlaceUuid = selectedPlaceUuid,
-                    reviewsForSelectedPlace = selectedReviews,
-                    reviewAuthorNames = reviewAuthorNames,
-                    currentUserReactionTypes = currentUserReactionTypes,
-                    currentUserUuid = DEMO_USER_UUID,
-                    ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
-                    onPlaceSelected = { selectedPlaceUuidString = it.toString() },
-                    onSelectionCleared = { selectedPlaceUuidString = null },
-                    onBookmarkToggle = { placeUuid, bookmarked ->
-                        userRepository.setBookmarked(
-                            userUuid = DEMO_USER_UUID,
-                            placeUuid = placeUuid,
-                            bookmarked = bookmarked,
-                        )
-                        dataRevision++
-                    },
-                    onReviewReactionToggle = { reviewUuid, type ->
-                        reviewReactionRepository.toggleReaction(
-                            reviewUuid = reviewUuid,
-                            userUuid = DEMO_USER_UUID,
-                            type = type,
-                        )
-                        // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
-                        dataRevision++
-                    },
-                    onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
-                        ratingViewModel.submitRating(
-                            placeUuid = placeUuid,
-                            userUuid = DEMO_USER_UUID,
-                            vibe = vibe,
-                            safety = safety,
-                            accessibility = accessibility,
-                            text = text,
-                        )
-                        // Profil-Historie und Score werden aus demselben Datenstand neu aufgebaut.
-                        dataRevision++
-                    },
+    Box(modifier = Modifier.fillMaxSize()) {
+        MapScreenWithRatingEntry(
+            places = places,
+            selectedPlaceUuid = selectedPlaceUuid,
+            reviewsForSelectedPlace = selectedReviews,
+            reviewAuthorNames = reviewAuthorNames,
+            currentUserReactionTypes = currentUserReactionTypes,
+            currentUserUuid = DEMO_USER_UUID,
+            ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
+            onPlaceSelected = { selectedPlaceUuidString = it.toString() },
+            onSelectionCleared = { selectedPlaceUuidString = null },
+            onBookmarkToggle = { placeUuid, bookmarked ->
+                userRepository.setBookmarked(
+                    userUuid = DEMO_USER_UUID,
+                    placeUuid = placeUuid,
+                    bookmarked = bookmarked,
                 )
+                dataRevision++
+            },
+            onReviewReactionToggle = { reviewUuid, type ->
+                reviewReactionRepository.toggleReaction(
+                    reviewUuid = reviewUuid,
+                    userUuid = DEMO_USER_UUID,
+                    type = type,
+                )
+                // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
+                dataRevision++
+            },
+            onReviewAuthorSelected =(::openProfile),
+            onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
+                ratingViewModel.submitRating(
+                    placeUuid = placeUuid,
+                    userUuid = DEMO_USER_UUID,
+                    vibe = vibe,
+                    safety = safety,
+                    accessibility = accessibility,
+                    text = text,
+                )
+                // Profil-Historie und Score werden aus demselben Datenstand neu aufgebaut.
+                dataRevision++
+            },
+        )
 
-                ProfileEntryButton(
-                    initial = profileUiState?.profileInitial ?: "?",
-                    onClick = { destinationName = AppDestination.PROFILE.name },
-                )
-            }
+        if (destination == AppDestination.MAP) {
+            ProfileEntryButton(
+                initial = profileViewModel
+                    .getProfile(DEMO_USER_UUID, DEMO_USER_UUID)
+                    ?.profileInitial
+                    ?: "?",
+                onClick = { openProfile(DEMO_USER_UUID) },
+            )
         }
 
-        AppDestination.PROFILE -> {
+        if (destination == AppDestination.PROFILE) {
             if (profileUiState != null) {
                 ProfileScreen(
                     profile = profileUiState,
@@ -240,7 +255,7 @@ private fun MissingProfileScreen(onBack: () -> Unit) {
                 contentColor = Moss,
             ) {
                 Text(
-                    text = "Profil nicht gefunden · Zurück zur Karte",
+                    text = "Dieses Community-Profil ist nicht mehr verfügbar · Zurück zum Ort",
                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
                     fontWeight = FontWeight.SemiBold,
                 )
