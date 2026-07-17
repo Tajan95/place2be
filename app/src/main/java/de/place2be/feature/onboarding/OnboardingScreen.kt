@@ -42,9 +42,9 @@ import de.place2be.ui.theme.SheetHandle
 import de.place2be.ui.theme.WarmSurface
 
 /**
- * Gemeinsamer, seitenweiser Erklaerfluss fuer den ersten App-Start und die
- * spaeter erneut aufrufbare Hilfe. Im Hilfe-Modus kann die Ansicht sofort wieder
- * geschlossen werden; beim ersten Start fuehrt sie bewusst bis zur Karte.
+ * Gemeinsamer, seitenweiser Erklärfluss für den ersten App-Start und die
+ * später erneut aufrufbare Hilfe. Im Hilfe-Modus kann die Ansicht sofort wieder
+ * geschlossen werden; beim ersten Start führt sie bewusst bis zur Karte.
  */
 @Composable
 fun OnboardingScreen(
@@ -97,7 +97,7 @@ fun OnboardingScreen(
                         text = if (mode == OnboardingMode.FIRST_LAUNCH) {
                             "Vier kurze Schritte bis zur Karte"
                         } else {
-                            "Die wichtigsten App-Regeln erneut erklaert"
+                            "Die wichtigsten App-Regeln erneut erklärt"
                         },
                         color = DarkInk.copy(alpha = 0.6f),
                         fontSize = 11.sp,
@@ -106,7 +106,7 @@ fun OnboardingScreen(
 
                 if (mode == OnboardingMode.HELP) {
                     TextButton(onClick = onFinish) {
-                        Text("Schliessen", color = Moss, fontWeight = FontWeight.SemiBold)
+                        Text("Schließen", color = Moss, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -202,7 +202,7 @@ fun OnboardingScreen(
             ) {
                 if (safePageIndex > 0) {
                     TextButton(onClick = { currentPage = safePageIndex - 1 }) {
-                        Text("Zurueck", color = Moss, fontWeight = FontWeight.SemiBold)
+                        Text("Zurück", color = Moss, fontWeight = FontWeight.SemiBold)
                     }
                 } else {
                     Spacer(Modifier.weight(1f))
@@ -224,8 +224,8 @@ fun OnboardingScreen(
                     Text(
                         text = when {
                             !isLastPage -> "Weiter"
-                            mode == OnboardingMode.FIRST_LAUNCH -> "Karte oeffnen"
-                            else -> "Zurueck zum Profil"
+                            mode == OnboardingMode.FIRST_LAUNCH -> "Karte öffnen"
+                            else -> "Zurück zum Profil"
                         },
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
