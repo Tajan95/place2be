@@ -2,211 +2,285 @@
 
 ## 1. Projektüberblick
 
-place2be ist eine Android-App, die Nutzerinnen und Nutzern hilft, öffentliche und niedrigschwellig nutzbare Orte zu entdecken. Im Mittelpunkt stehen Orte, an denen man sich aufhalten kann, ohne zwingend Geld ausgeben zu müssen, zum Beispiel Parks, öffentliche Plätze, Promenaden, Einkaufsmeilen oder andere urbane Treffpunkte.
+place2be ist eine Android-App zum Entdecken und Bewerten öffentlicher, niedrigschwellig nutzbarer Orte. Im Mittelpunkt stehen Treffpunkte wie Parks, Plätze und Promenaden, an denen Menschen Zeit verbringen können, ohne zwingend Geld auszugeben.
 
-Die App soll Community-Feedback nutzen, um die Aufenthaltsqualität solcher Orte dynamisch einzuschätzen. Bewertungen sollen zeitabhängig gewichtet werden, damit Orte nicht dauerhaft durch veraltete Eindrücke geprägt bleiben.
+Community-Feedback soll nicht als dauerhaft statischer Durchschnitt verstanden werden. Aktuelle Bewertungen zählen stärker als ältere, damit sich Veränderungen eines Ortes im sichtbaren Score widerspiegeln.
 
 ## 2. Zielgruppe
 
-Die App richtet sich vor allem an Menschen, die spontan öffentliche Aufenthaltsorte suchen und wissen möchten, ob sich ein Besuch lohnt. Besonders relevant ist die Idee für junge Menschen oder Gruppen, die sich außerhalb der eigenen Wohnung treffen möchten, ohne kommerzielle Angebote nutzen zu müssen.
+Die App richtet sich an Menschen, die spontan einen öffentlichen Aufenthaltsort suchen und einschätzen möchten, ob sich ein Besuch aktuell lohnt. Besonders relevant ist die Idee für junge Menschen und Gruppen, die sich außerhalb der eigenen Wohnung treffen möchten, ohne kommerzielle Angebote nutzen zu müssen.
 
 ## 3. Problemstellung
 
-Viele Orte im öffentlichen Raum sind schwer einschätzbar: Ein Ort kann heute angenehm, sicher und lebendig sein, aber in einigen Monaten unattraktiv wirken. Klassische statische Bewertungen altern schlecht und bilden Veränderungen nur unzureichend ab.
+Öffentliche Orte sind schwer langfristig einzuschätzen. Atmosphäre, Sicherheit, Zugang und Nutzung können sich abhängig von Zeit, Umfeld und Entwicklung verändern. Klassische Bewertungen altern schlecht und können einen längst überholten Eindruck konservieren.
 
-place2be soll dieses Problem lösen, indem Orte regelmäßig neu bewertet werden und aktuelle Rückmeldungen stärker zählen als alte Bewertungen. Zusätzlich sollen Textrezensionen und Review-Reaktionen helfen, besonders hilfreiche Einschätzungen sichtbar zu machen.
+place2be begegnet diesem Problem durch:
+
+- getrennte Bewertungen für Vibes, Sicherheit und Erreichbarkeit,
+- stärkere Gewichtung aktueller Eindrücke,
+- ergänzende Textrezensionen,
+- Reaktionen auf hilfreiche Rezensionen,
+- einen Nutzer-Score aus Aktivität und Reputation,
+- datenschutzbewusste öffentliche Profile.
 
 ## 4. Lastenheft: fachliche Anforderungen
 
 ### 4.1 Muss-Anforderungen für den MVP
 
-- Nutzerinnen und Nutzer sehen nach dem Onboarding eine Map-/Dashboard-Ansicht.
-- Die Map wird im MVP als Mock-Map umgesetzt, nicht als echte Live-Karte.
-- Ohne ausgewählten Ort zeigt die Map Schnellzugriffe, z. B. Kategorien, beliebte Orte in der Nähe und gespeicherte Orte.
-- Nutzerinnen und Nutzer können einen Ort auf der Map auswählen.
-- Nach Auswahl eines Ortes erscheint eine Mini-Preview bzw. Schnellübersichtsleiste.
-- Die Mini-Preview kann zur Detailansicht erweitert werden oder ist dafür vorbereitet.
-- Jeder Ort besitzt mindestens Name, Kategorie, Beschreibung, Ortsangabe, Tags und aggregierte Kriterienwerte.
-- Nutzerinnen und Nutzer können einen Ort anhand von Vibes, Sicherheit und Erreichbarkeit bewerten.
-- Nutzerinnen und Nutzer können zusätzlich eine kurze Textrezension verfassen.
-- Neue Bewertungen beeinflussen den Score eines Ortes sichtbar oder die Logik dafür ist vorbereitet.
-- Ältere Bewertungen werden in der Score-Berechnung schwächer gewichtet als neue.
-- Likes/Dislikes auf Reviews sind modelliert oder über Mock-Daten demonstrierbar.
-- Nutzerinnen und Nutzer können Orte als gespeicherte Orte/Bookmarks/Favoriten markieren oder die Funktion ist vorbereitet.
-- Eine Profilseite mit Pseudonym/Icon und Nutzer-Score ist MVP-Bestandteil, zunächst ggf. in begrenzter Ausbaustufe.
-- Bewertung ist nur vor Ort möglich oder im MVP über eine vereinfachte/simulierte Standortbestätigung abgebildet.
-- Die App ist als Android-App mit Kotlin und Jetpack Compose umgesetzt.
+- Beim ersten Start erscheint ein Onboarding.
+- Nach abgeschlossenem Onboarding startet die App direkt auf einer Map-/Dashboard-Ansicht.
+- Die Karte wird im MVP als stilisierte Mock-Map umgesetzt.
+- Ohne ausgewählten Ort zeigt die Map Schnellzugriffe für Filter, beliebte und gespeicherte Orte.
+- Nutzer können Orte über Marker oder Listen auswählen.
+- Nach Auswahl erscheint eine Mini-Preview, die zur Detailansicht erweitert werden kann.
+- Die Detailansicht zeigt Name, Kategorie, Beschreibung, Ortsangabe, Tags und aggregierte Kriterienwerte.
+- Orte können persistent als Bookmark gespeichert und wieder entfernt werden.
+- Ein frischer Demo-Nutzer startet ohne gespeicherte Orte.
+- Nutzer können Vibes, Sicherheit und Erreichbarkeit jeweils von 1 bis 5 bewerten.
+- Eine kurze Textrezension ist optional.
+- Neue Bewertungen werden sofort in der Ortsansicht sichtbar.
+- Derselbe Nutzer darf denselben Ort erst nach 24 Stunden erneut bewerten.
+- Aktuelle Bewertungen zählen stärker als ältere Bewertungen.
+- Die sichtbare Aktivitätszahl pro Ort betrachtet die vergangenen 365 Tage.
+- Textrezensionen können nach **Rezent** und **Beliebt** sortiert werden.
+- Lange Rezensionen können ein- und ausgeklappt werden.
+- Likes und Dislikes sind accountgebunden, persistent und umschaltbar.
+- Eigene Rezensionen können nicht selbst bewertet werden.
+- Pro Ort werden höchstens 50 nichtleere Rezensionstexte gespeichert; numerische Daten verdrängter Texte bleiben erhalten.
+- Eine Profilseite zeigt Pseudonym, neutrales Icon und dynamischen Nutzer-Score.
+- Das eigene Profil zeigt eine private Bewertungshistorie.
+- Öffentliche Profile zeigen nur aggregierte Kennzahlen und keine chronologische Ortshistorie.
+- Autoren fremder Rezensionen sind anklickbar und führen zum öffentlichen Profil.
+- Der vollständige Onboarding-Inhalt ist später im eigenen Profil als Hilfe erneut aufrufbar.
+- Die Bewertung ist fachlich an einen Vor-Ort-Aufenthalt gebunden; im MVP wird dieser Zustand simuliert.
+- Die App ist mit Kotlin und Jetpack Compose umgesetzt.
 
 ### 4.2 Soll-Anforderungen
 
-- Die App nutzt Material 3 für ein konsistentes UI.
-- Die App trennt UI, Datenmodell, Datenzugriff und Bewertungslogik.
-- Die App folgt einer MVVM- und Feature-orientierten Struktur.
-- Die Datenhaltung ist so gekapselt, dass später eine echte Datenquelle angebunden werden kann.
-- Standortberechtigung und Datenschutz werden im MVP zumindest konzeptionell berücksichtigt.
-- Die öffentliche Profilansicht wird datenschutzbewusst gestaltet oder als offene Entscheidung dokumentiert.
+- Material 3 sorgt für ein konsistentes Android-UI.
+- UI, fachliche Modelle, Datenzugriff und Berechnungen sind getrennt.
+- Die Struktur ist Feature- und MVVM-orientiert.
+- Score- und Regelwerke sind unabhängig von Compose testbar.
+- Datenzugriff erfolgt über Repository-Interfaces.
+- Der Local-first-MVP funktioniert ohne Netzwerkzugriff.
+- Bestehender Map-, Orts- und Review-Kontext bleibt beim Öffnen eines Profils oder der Hilfe erhalten.
+- Datenschutzentscheidungen werden ausdrücklich dokumentiert.
+- Der Ausgangszustand der Demo ist reproduzierbar.
 
-### 4.3 Kann-Anforderungen / Nice-to-have
+### 4.3 Kann-Anforderungen und spätere Erweiterungen
 
-- Echte GPS-basierte Standortprüfung.
-- Echte Kartenintegration.
-- Komplexere Filteransicht nach Tags.
-- Ausgereifte Normalisierung des Nutzer-Scores gegen Score-Farming.
-- Vorschlagen neuer Orte durch Nutzerinnen und Nutzer.
-- Backend, Firebase oder REST-API.
-- Nutzerkonten und Ranglisten.
-- Zeitabhängige Events, z. B. Wochenmarkt nur zu bestimmten Zeiten.
+- echte GPS- und Mindestaufenthaltsprüfung,
+- echte Kartenintegration,
+- produktive Registrierung und Kontoverwaltung,
+- Profilbearbeitung und frei wählbare Profilbilder,
+- Backend, Firebase oder REST-API,
+- Mehrgeräte-Synchronisation,
+- serverseitige Moderation und Manipulationserkennung,
+- Vorschlagen neuer Orte,
+- Ranglisten und soziale Kontaktfunktionen,
+- zeitabhängige Events,
+- empirische Feinjustierung der Nutzer-Score-Konstanten,
+- Navigation Compose, native Lifecycle-ViewModels und Dependency Injection.
 
-## 5. Pflichtenheft: technische Umsetzung im MVP
+## 5. Pflichtenheft: technische Umsetzung
 
 ### 5.1 Technologie
 
-- Android Studio als Entwicklungsumgebung
-- Kotlin als Programmiersprache
-- Jetpack Compose für UI
-- Material 3 für UI-Komponenten
-- Gradle/Kotlin DSL als Build-System
+- Android Studio
+- Kotlin
+- Jetpack Compose
+- Material 3
+- Gradle Kotlin DSL
+- Gson für JSON-Verarbeitung
+- JUnit für lokale Unit-Tests
 
-### 5.2 Vorgeschlagene Architektur
+### 5.2 Architektur
 
-Die App wird in einfache Schichten gegliedert:
+Die App ist in folgende Verantwortungsbereiche gegliedert:
 
-- **Feature/UI-Schicht:** Compose-Screens wie MapScreen, Detailansicht, Bewertungsformular, Onboarding und Profil.
-- **ViewModel-Schicht:** Hält UI-Zustand und verarbeitet Screen-Interaktionen.
-- **Domain-Schicht:** Enthält fachliche Modelle und Use Cases, z. B. Score-Berechnung.
-- **Repository-Schicht:** Kapselt Zugriff auf Orte, Bewertungen, Bookmarks und Nutzerinformationen.
-- **Data-Schicht:** Enthält Mock-Daten und local-first Repository-Implementierungen.
+- **Feature/UI:** Compose-Screens und UI-Zustände für Map, Bewertung, Profil und Onboarding.
+- **Domain:** fachliche Modelle, Repository-Verträge und Use Cases.
+- **Data:** JSON-Mock-Daten, lokale Arbeitskopien und Repository-Implementierungen.
+- **Core:** featureübergreifende Regeln, insbesondere Standort- und Bewertungsberechtigung.
+- **App:** Zusammensetzung der Repositories, ViewModel-artigen Klassen und Navigation des Demo-Flows.
 
-### 5.3 Vorläufiges Datenmodell
+Die MVP-Implementierung ist MVVM-orientiert, verwendet aber bewusst schlanke Kotlin-Klassen statt durchgängig native `androidx.lifecycle.ViewModel`-Basisklassen. Die Navigation wird über speicherbaren Compose-Zustand gesteuert. Eine spätere technische Härtung kann Navigation Compose, Lifecycle-ViewModels, `SavedStateHandle` und Dependency Injection ergänzen.
+
+### 5.3 Datenmodell
 
 #### Place
 
-- `uuid`: eindeutige UUID
-- `name`: Name des Ortes
-- `category`: Kategorie, z. B. Park, Platz, Promenade, Einkaufsmeile
-- `description`: kurze Beschreibung
-- `latitude` / `longitude` oder vereinfachte Ortsangabe
-- `locationHint`: lesbare Ortsangabe
-- `attributes`: Tags/Ortseigenschaften
-- `initialScore`: Startwert/Fallback für Mock-Daten
+- `uuid`
+- `name`
+- `category`
+- `description`
+- `imageReference`
+- `latitude` / `longitude`
+- `locationHint`
+- `attributes`
+- `initialScore` als Fallback
 
 #### Review
 
-- `uuid`: eindeutige UUID
-- `placeUuid`: Zuordnung zum Ort über dessen UUID
-- `userUuid`: Zuordnung zur bewertenden Person über deren UUID
-- `vibe`: Bewertung für Vibes
-- `safety`: Bewertung für Sicherheit
-- `accessibility`: Bewertung für Erreichbarkeit
-- `timestampMillis`: Zeitstempel der Bewertung
-- `text`: optionale Textrezension
-- `likes`: Anzahl positiver Reaktionen
-- `dislikes`: Anzahl negativer Reaktionen
+- `uuid`
+- `placeUuid`
+- `userUuid`
+- `vibe`
+- `safety`
+- `accessibility`
+- `timestampMillis`
+- `text`
+- `likes`
+- `dislikes`
+
+#### Bookmark
+
+- `uuid`
+- `userUuid`
+- `placeUuid`
+- `createdAtMillis`
+
+#### ReviewReaction
+
+- Nutzerbezug
+- Review-Bezug
+- Typ `LIKE` oder `DISLIKE`
+- Zeitstempel
+
+Pro Nutzer und Review existiert höchstens eine aktive Reaktion.
 
 #### User
 
-- `uuid`: eindeutige UUID
-- `displayName`: Pseudonym
-- `userScore`: Aktivitäts-/Reputationswert oder vorbereitete Struktur dafür
+- `uuid`
+- `displayName`
+- vorbereiteter Seed-Score als Datenfeld
 
-#### PlaceCategory
+Der tatsächlich sichtbare Nutzer-Score wird dynamisch aus Reviews und Reaktionen berechnet.
 
-- Park
-- Platz
-- Promenade
-- Einkaufsmeile
-- Shopping-Center
-- Stadtviertel
-- Sonstiger öffentlicher Ort
+#### UserScoreResult
 
-#### PlaceAttribute
+- Gesamt-Score
+- Aktivität
+- Reputation
+- Teilwerte für Bewertungen, Texte und Reaktionen
 
-- öffentliche Toiletten
-- Barrierefreiheit
-- Schatten
-- Sitzmöglichkeiten
-- Essen/Trinken
-- überdacht
-- klimatisiert
-- Sprache/Kultur
-- lokale Events
-- zeitabhängige Events
+### 5.4 Orts-Score
 
-### 5.4 Score-Berechnung
-
-Der Score eines Ortes ergibt sich aus den Bewertungen der Nutzerinnen und Nutzer. Neue Bewertungen zählen stärker als alte Bewertungen. Dadurch entsteht ein dynamisches Ranking.
-
-Vereinfachte Formelidee:
+Vibes, Sicherheit und Erreichbarkeit werden separat gewichtet:
 
 ```text
-gewicht = 1 / (1 + alter_in_tagen * decay_faktor)
-review_score = durchschnitt(vibes, sicherheit, erreichbarkeit)
-gewichtete_bewertung = review_score * gewicht
-score = summe(gewichtete_bewertungen) / summe(gewichte)
+gewicht = 1 / (1 + alter_in_tagen × 0,05)
+gewichteter_kriterienwert = summe(wert × gewicht) / summe(gewichte)
+gesamtwert = mittelwert(vibes, sicherheit, erreichbarkeit)
 ```
 
-Diese Formel ist bewusst einfach, damit sie im Vortrag nachvollziehbar erklärt und im Code leicht getestet werden kann.
+Die Berechnung liegt in `CalculatePlaceScoreUseCase`. Alte Bewertungen werden nicht gelöscht, verlieren aber an Einfluss. Der rollierende Ein-Jahres-Zähler ist davon getrennt.
 
 ### 5.5 Nutzer-Score
 
-Der Nutzer-Score soll Aktivität und Reputation abbilden.
+Der Nutzer-Score ist umgesetzt und bildet Aktivität sowie Reputation getrennt ab.
 
-Mögliche Punktequellen:
+Berücksichtigt werden unter anderem:
 
-- Bewertung abgeben
-- Textrezension verfassen
-- Likes auf eigene Rezensionen erhalten
-- optional minimale Punkte für das Liken/Disliken fremder Rezensionen
+- Bewertung neuer Orte,
+- abnehmender Erkundungsbonus,
+- Begrenzung naher Ortscluster,
+- ausreichend lange Textrezensionen,
+- begrenzte Reaktionen auf fremde Reviews,
+- positive Netto-Reaktionen auf eigene Texte,
+- logarithmisches Reputationswachstum,
+- Aktivitätsfaktor des bewerteten Ortes,
+- Obergrenze pro Rezension.
 
-Offen bleibt, wie stark der Score normalisiert oder gedeckelt wird, damit beliebte Orte nicht zu leicht zum Score-Farming genutzt werden können.
+Die verbindlichen Regeln stehen in `docs/nutzer-score-regeln.md`. Die Normalisierung ist nicht mehr offen; lediglich eine spätere empirische Feinjustierung anhand realer Nutzungsdaten bleibt Ausblick.
 
-### 5.6 Standortbestätigung im MVP
+### 5.6 Rezensionen und Aufbewahrung
 
-Die echte GPS-basierte Standortprüfung wird zunächst nicht als harte Muss-Anforderung behandelt. Für den MVP reicht eine vereinfachte oder simulierte Bestätigung. Der Bewertungsbutton soll aber sichtbar machen, dass Bewertungen nur vor Ort möglich sind: Er bleibt sichtbar, ist jedoch deaktiviert/ausgegraut, wenn keine Vor-Ort-Bestätigung vorliegt.
+- Neue Reviews werden über das Repository gespeichert und anschließend erneut gelesen.
+- **Rezent** sortiert absteigend nach Zeitstempel.
+- **Beliebt** berücksichtigt Netto-Reaktionen und eine Altersstrafe.
+- Pro Ort sind höchstens 50 Texte sichtbar und persistent gespeichert.
+- Beim Verdrängen wird nur `text` entfernt.
+- Kriterienwerte, Nutzer, Ort, Zeitstempel und Reaktionszähler bleiben erhalten.
 
-### 5.7 Datenhaltung
+### 5.7 Standortbestätigung
 
-Für den MVP wird eine lokale JSON-basierte Mock-Datenhaltung verwendet:
+Die Fachlogik unterscheidet bestätigte und nicht bestätigte Standortzustände. Im Demo-MVP wird `SIMULATED_CONFIRMED` verwendet, damit der Bewertungsflow zuverlässig demonstriert werden kann.
 
-- feste Mock-Daten für Orte,
-- Mock-Daten für Reviews, Likes/Dislikes, Bookmarks und Nutzer-Score,
-- persistente Arbeitskopien der JSON-Dateien im internen App-Speicher,
-- zentralisierte CRUD-Operationen in der Mock-Datenquelle,
-- optional lokale Persistenz über Room/SQLite, falls der Scope es erlaubt.
+Eine reale Version müsste zusätzlich behandeln:
 
-Wichtig ist, dass die UI nicht direkt von hart codierten Daten abhängt, sondern über eine Repository-Schicht arbeitet.
+- Laufzeitberechtigungen,
+- Messungenauigkeit,
+- Mindestaufenthaltsdauer,
+- Datenschutz und Zweckbindung,
+- Manipulationsschutz.
+
+### 5.8 Local-first-Datenhaltung
+
+Die Seed-Dateien unter `app/src/main/data/mockdata` enthalten Orte, Reviews, Nutzer und den initialen Bookmark-Zustand. `MockPlaceDataSource` kopiert diese Daten beim ersten Start in den internen App-Speicher und bearbeitet ausschließlich die Arbeitskopien.
+
+Zusätzlich werden lokal gespeichert:
+
+- Review-Reaktionen,
+- Onboarding-Abschlussstatus,
+- durch Nutzer erstellte Bewertungen und Bookmarks.
+
+Die UI greift nicht direkt auf JSON-Dateien zu, sondern auf Repository-Interfaces.
+
+### 5.9 Onboarding und Hilfe
+
+Das Onboarding erklärt in vier Schritten:
+
+1. Zweck der App,
+2. Mock-Map und Bottom-Sheet,
+3. Vibes, Sicherheit und Erreichbarkeit,
+4. Bewertungsalterung und Standortbezug.
+
+Der Abschlussstatus wird als boolescher Wert in app-internen `SharedPreferences` gespeichert. Derselbe Inhalt ist im eigenen Profil erneut als Hilfe erreichbar.
+
+### 5.10 Profil, Datenschutz und Account-Abgrenzung
+
+Der MVP verwendet einen festen pseudonymisierten Demo-Nutzer und behandelt ihn als bereits angemeldet.
+
+Nicht umgesetzt werden:
+
+- Registrierung,
+- Login und Logout,
+- Passwortverwaltung,
+- Profil-Erstellung,
+- Profilbearbeitung,
+- Kontowiederherstellung und Kontolöschung.
+
+Diese Abgrenzung ist bewusst: Der fachliche MVP demonstriert Score, private Historie, öffentliche Reputation und Datenschutz, nicht einen produktiven Account-Lifecycle.
+
+Das eigene Profil zeigt vollständige private Daten. Öffentliche Profile zeigen nur aggregierte Werte. Diese Trennung darf durch eine spätere Backend-Anbindung nicht stillschweigend aufgehoben werden.
 
 ## 6. Abgrenzung des MVP
 
 Nicht Teil des MVP sind:
 
-- echtes Login-System,
-- zentrale Nutzerverwaltung,
-- produktives Backend,
+- echte Live-Karte,
+- produktive GPS-Verifikation,
+- Registrierung und vollständige Kontoverwaltung,
+- zentrales Backend,
 - globale Synchronisation,
-- vollständiger Manipulationsschutz,
-- echte Kartenintegration,
-- vollständige GPS-Verifikation,
-- finale Normalisierung des Nutzer-Scores,
-- komplexe Filter- und Rankinglogik.
+- serverseitige Moderation,
+- vollständiger Schutz vor manipulierten Clients,
+- produktive Datenschutz- und Einwilligungsverwaltung,
+- Navigation Compose und native ViewModel-Lifecycle-Integration.
 
-Diese Punkte können in der Fallstudie als Ausblick oder Erweiterungsmöglichkeiten beschrieben werden.
+Diese Punkte werden als Ausblick dargestellt. Sie sind keine Voraussetzung dafür, die Kernidee und die umgesetzten Android-Konzepte zu demonstrieren.
 
 ## 7. Demo-Szenario
 
-Ein mögliches Demo-Szenario für die Präsentation:
+Der verbindliche Ablauf für die Präsentation am 27.07.2026 steht in:
 
-1. App starten.
-2. Onboarding kurz zeigen oder erklären.
-3. Mock-Map mit Default-Shortcuts anzeigen.
-4. Einen Ort auf der Map auswählen.
-5. Mini-Preview/Schnellübersichtsleiste zeigen.
-6. Detailansicht mit Bild, Bookmark, Kriterienwerten und Reviews öffnen.
-7. Bewertung mit Vibes, Sicherheit, Erreichbarkeit und optionaler Textrezension abgeben.
-8. Aktualisierten Score bzw. vorbereitete Score-Änderung anzeigen.
-9. Bewertungsalterung erklären.
-10. Profil/Nutzer-Score, Bookmarks und Review-Reaktionen zumindest anhand von Mock-Daten erklären.
+[`docs/demo-runbook-2026-07-27.md`](demo-runbook-2026-07-27.md)
+
+Der Ablauf umfasst Vorbereitung, Erststart, Map, Bookmark, Ortsdetail, Bewertung, Review-Reaktionen, öffentliche Profile, eigenes Profil, Architektur, Einschränkungen und ein Fallback-Szenario.
 
 ## 8. Bewertung der Designentscheidung
 
-Die Local-first-Entscheidung ist pragmatisch: Sie reduziert technische Risiken und ermöglicht eine stabile Demo. Gleichzeitig bleibt die Architektur offen für spätere reale Datenquellen. Damit passt der MVP gut zum Modulziel, eine Android-App nachvollziehbar zu konzipieren und funktional umzusetzen.
+Die Local-first-Entscheidung reduziert technische Risiken und ermöglicht eine reproduzierbare Offline-Demo. Gleichzeitig zeigen Repository-Grenzen, Domain-Use-Cases und getrennte Profilmodi, wie eine spätere produktive Datenquelle integriert werden könnte.
+
+Der MVP ist bewusst kein vollständiges Plattformprodukt. Er konzentriert sich auf die fachlich unterscheidbaren und für das Modul relevanten Kernmechanismen.
