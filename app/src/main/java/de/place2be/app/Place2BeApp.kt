@@ -1,8 +1,13 @@
 package de.place2be.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,26 +33,21 @@ import de.place2be.domain.usecase.CalculateUserScoreUseCase
 import de.place2be.domain.usecase.ReviewSubmissionCooldownPolicy
 import de.place2be.feature.map.MapScreenWithRatingEntry
 import de.place2be.feature.map.MapViewModel
+import de.place2be.feature.profile.ProfileScreen
+import de.place2be.feature.profile.ProfileViewModel
 import de.place2be.feature.rating.RatingViewModel
+import de.place2be.ui.theme.DarkInk
 import de.place2be.ui.theme.LeafSurface
 import de.place2be.ui.theme.Moss
+import de.place2be.ui.theme.WarmSurface
 import java.util.UUID
 
 /**
  * Zentrale App-Composable für den MVP-Demo-Flow.
  *
- * Die Bewertung bleibt Teil der erweiterbaren Orts-Detailansicht über der Map.
- * Die Vor-Ort-Bedingung wird auf diesem Feature-Branch bewusst simuliert, damit
- * Slider, Textrezension, Persistenz, Cooldown und Score-Aktualisierung in der IDE
- * getestet werden können. Nur die Standortfreigabe ist simuliert; die
- * 24-Stunden-Sperre wird anhand der tatsächlich gespeicherten Reviews geprüft.
- * Die fachliche Standort-/Mindestaufenthaltslogik bleibt in core.location
- * vorbereitet.
- *
- * Bookmarks und Review-Reaktionen werden über Local-first-Repositories
- * gespeichert. Nach jeder Änderung wird derselbe lokale Datenstand erneut
- * gelesen. Der Nutzer-Score wird daraus dynamisch neu berechnet, statt als
- * dauerhaft inkrementierter Wert gespeichert zu werden.
+ * Map, erweiterbare Ortsdetails und Bewertung bleiben der primäre Flow. Das
+ * Profil ist über den bestehenden Nutzerkreis im Dashboard erreichbar und zeigt
+ * den dynamischen Nutzer-Score sowie die private Bewertungs-Historie.
  */
 @Composable
 fun Place2BeApp() {
@@ -61,9 +61,24 @@ fun Place2BeApp() {
     val ratingViewModel = remember(placeRepository) { RatingViewModel(placeRepository) }
     val cooldownPolicy = remember { ReviewSubmissionCooldownPolicy() }
     val calculateUserScoreUseCase = remember { CalculateUserScoreUseCase() }
+    val profileViewModel = remember(
+        userRepository,
+        placeRepository,
+        reviewReactionRepository,
+        calculateUserScoreUseCase,
+    ) {
+        ProfileViewModel(
+            userRepository = userRepository,
+            placeRepository = placeRepository,
+            reviewReactionRepository = reviewReactionRepository,
+            calculateUserScoreUseCase = calculateUserScoreUseCase,
+        )
+    }
 
     var dataRevision by rememberSaveable { mutableStateOf(0) }
     var selectedPlaceUuidString by rememberSaveable { mutableStateOf<String?>(null) }
+    var destinationName by rememberSaveable { mutableStateOf(AppDestination.MAP.name) }
+    val destination = AppDestination.valueOf(destinationName)
 
     val mapViewModel = remember(placeRepository, userRepository, dataRevision) {
         MapViewModel(
@@ -75,22 +90,10 @@ fun Place2BeApp() {
         )
     }
     val places = remember(mapViewModel, dataRevision) { mapViewModel.getMapItems() }
-    val allDomainPlaces = remember(placeRepository, dataRevision) { placeRepository.getPlaces() }
-    val allReviews = remember(placeRepository, dataRevision) { placeRepository.getReviews() }
-    val currentUserReactions = remember(reviewReactionRepository, dataRevision) {
-        reviewReactionRepository.getReactionsForUser(DEMO_USER_UUID)
-    }
-    val userScoreResult = remember(
-        allDomainPlaces,
-        allReviews,
-        currentUserReactions,
-        calculateUserScoreUseCase,
-    ) {
-        calculateUserScoreUseCase.calculate(
-            userUuid = DEMO_USER_UUID,
-            places = allDomainPlaces,
-            reviews = allReviews,
-            reactions = currentUserReactions,
+    val profileUiState = remember(profileViewModel, dataRevision) {
+        profileViewModel.getProfile(
+            profileUserUuid = DEMO_USER_UUID,
+            viewerUserUuid = DEMO_USER_UUID,
         )
     }
 
@@ -120,67 +123,135 @@ fun Place2BeApp() {
         )
     }
 
-    Box {
-        MapScreenWithRatingEntry(
-            places = places,
-            selectedPlaceUuid = selectedPlaceUuid,
-            reviewsForSelectedPlace = selectedReviews,
-            reviewAuthorNames = reviewAuthorNames,
-            currentUserReactionTypes = currentUserReactionTypes,
-            currentUserUuid = DEMO_USER_UUID,
-            ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
-            onPlaceSelected = { selectedPlaceUuidString = it.toString() },
-            onSelectionCleared = { selectedPlaceUuidString = null },
-            onBookmarkToggle = { placeUuid, bookmarked ->
-                userRepository.setBookmarked(
-                    userUuid = DEMO_USER_UUID,
-                    placeUuid = placeUuid,
-                    bookmarked = bookmarked,
-                )
-                dataRevision++
-            },
-            onReviewReactionToggle = { reviewUuid, type ->
-                reviewReactionRepository.toggleReaction(
-                    reviewUuid = reviewUuid,
-                    userUuid = DEMO_USER_UUID,
-                    type = type,
-                )
-                // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
-                dataRevision++
-            },
-            onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
-                ratingViewModel.submitRating(
-                    placeUuid = placeUuid,
-                    userUuid = DEMO_USER_UUID,
-                    vibe = vibe,
-                    safety = safety,
-                    accessibility = accessibility,
-                    text = text,
-                )
-                // Bewertungs-, Textbonus- und Reputationsbasis werden neu berechnet.
-                dataRevision++
-            },
-        )
+    BackHandler(enabled = destination == AppDestination.PROFILE) {
+        destinationName = AppDestination.MAP.name
+    }
 
-        // Vorläufige MVP-Anzeige. Issue #15 übernimmt später die ausführliche
-        // Profilansicht mit Aufteilung in Aktivität und Reputation.
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(top = 28.dp, end = 78.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = LeafSurface,
-            contentColor = Moss,
-        ) {
+    when (destination) {
+        AppDestination.MAP -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                MapScreenWithRatingEntry(
+                    places = places,
+                    selectedPlaceUuid = selectedPlaceUuid,
+                    reviewsForSelectedPlace = selectedReviews,
+                    reviewAuthorNames = reviewAuthorNames,
+                    currentUserReactionTypes = currentUserReactionTypes,
+                    currentUserUuid = DEMO_USER_UUID,
+                    ratingCooldownRemainingMillis = submissionAvailability.remainingMillis,
+                    onPlaceSelected = { selectedPlaceUuidString = it.toString() },
+                    onSelectionCleared = { selectedPlaceUuidString = null },
+                    onBookmarkToggle = { placeUuid, bookmarked ->
+                        userRepository.setBookmarked(
+                            userUuid = DEMO_USER_UUID,
+                            placeUuid = placeUuid,
+                            bookmarked = bookmarked,
+                        )
+                        dataRevision++
+                    },
+                    onReviewReactionToggle = { reviewUuid, type ->
+                        reviewReactionRepository.toggleReaction(
+                            reviewUuid = reviewUuid,
+                            userUuid = DEMO_USER_UUID,
+                            type = type,
+                        )
+                        // Aktualisiert Zähler, Auswahl, Sortierung und Nutzer-Score.
+                        dataRevision++
+                    },
+                    onSubmitRating = { placeUuid, vibe, safety, accessibility, text ->
+                        ratingViewModel.submitRating(
+                            placeUuid = placeUuid,
+                            userUuid = DEMO_USER_UUID,
+                            vibe = vibe,
+                            safety = safety,
+                            accessibility = accessibility,
+                            text = text,
+                        )
+                        // Profil-Historie und Score werden aus demselben Datenstand neu aufgebaut.
+                        dataRevision++
+                    },
+                )
+
+                ProfileEntryButton(
+                    initial = profileUiState?.profileInitial ?: "?",
+                    onClick = { destinationName = AppDestination.PROFILE.name },
+                )
+            }
+        }
+
+        AppDestination.PROFILE -> {
+            if (profileUiState != null) {
+                ProfileScreen(
+                    profile = profileUiState,
+                    onBack = { destinationName = AppDestination.MAP.name },
+                )
+            } else {
+                MissingProfileScreen(
+                    onBack = { destinationName = AppDestination.MAP.name },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Legt eine klickbare Schicht exakt über den bereits sichtbaren Profilkreis des
+ * Map-Headers. So bleibt das Dashboard-Layout unverändert und erhält dennoch
+ * einen klaren Profilzugang ohne zusätzliches Einstellungs-Zahnrad.
+ */
+@Composable
+private fun BoxScope.ProfileEntryButton(
+    initial: String,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .statusBarsPadding()
+            .padding(top = 23.dp, end = 32.dp)
+            .size(42.dp),
+        shape = CircleShape,
+        color = LeafSurface,
+        contentColor = Moss,
+        border = androidx.compose.foundation.BorderStroke(2.dp, Moss.copy(alpha = 0.65f)),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
-                text = "Score ${userScoreResult.totalScore}",
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                fontSize = 10.sp,
+                text = initial,
+                fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
             )
         }
     }
+}
+
+@Composable
+private fun MissingProfileScreen(onBack: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = WarmSurface,
+        contentColor = DarkInk,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Surface(
+                onClick = onBack,
+                shape = RoundedCornerShape(18.dp),
+                color = LeafSurface,
+                contentColor = Moss,
+            ) {
+                Text(
+                    text = "Profil nicht gefunden · Zurück zur Karte",
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+private enum class AppDestination {
+    MAP,
+    PROFILE,
 }
 
 private val DEMO_USER_UUID: UUID = UUID.fromString("f5257520-3685-4a1a-be5b-4a0ceb1baba7")
