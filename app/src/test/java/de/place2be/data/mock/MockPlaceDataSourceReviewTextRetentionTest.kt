@@ -96,14 +96,17 @@ class MockPlaceDataSourceReviewTextRetentionTest {
 
         assertEquals(51, storedReviews.size)
         assertEquals(50, storedReviews.count { it.text != null })
-        assertEquals(legacyReviews.first().copy(text = null), storedReviews.single { it.uuid == legacyReviews.first().uuid })
+        assertEquals(
+            legacyReviews.first().copy(text = null),
+            storedReviews.single { it.uuid == legacyReviews.first().uuid },
+        )
         assertTrue(storedReviews.drop(1).all { it.text != null })
     }
 
     private fun seedContentProvider(seedReviews: List<Review>): (String) -> String = { fileName ->
         when (fileName) {
             "places.json" -> PLACES_JSON
-            "reviews.json" -> gson.toJson(seedReviews.map(SeedReviewJson::from))
+            "reviews.json" -> gson.toJson(seedReviews.map { review -> SeedReviewJson.from(review) })
             "users.json" -> USERS_JSON
             "bookmarks.json" -> "[]"
             else -> error("Unexpected seed file: $fileName")
