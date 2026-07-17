@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
@@ -77,6 +79,8 @@ import kotlin.math.ln
  *
  * Review-Reaktionen sind accountgebunden. Die aktuell gewählte Reaktion wird
  * visuell hervorgehoben; eigene Rezensionen bleiben bewusst nicht bewertbar.
+ * Autor-Icon und Name öffnen über einen UUID-Callback das eigene oder ein
+ * datenschutzbewusst begrenztes öffentliches Profil.
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +96,7 @@ fun MapScreenWithRatingEntry(
     onSelectionCleared: () -> Unit,
     onBookmarkToggle: (placeUuid: UUID, bookmarked: Boolean) -> Unit,
     onReviewReactionToggle: (reviewUuid: UUID, type: ReviewReactionType) -> Unit,
+    onReviewAuthorSelected: (userUuid: UUID) -> Unit,
     onSubmitRating: (
         placeUuid: UUID,
         vibe: Int,
@@ -149,6 +154,7 @@ fun MapScreenWithRatingEntry(
                     onClose = onSelectionCleared,
                     onBookmarkToggle = onBookmarkToggle,
                     onReviewReactionToggle = onReviewReactionToggle,
+                    onReviewAuthorSelected = onReviewAuthorSelected,
                     onSubmitRating = onSubmitRating,
                 )
             }
@@ -176,6 +182,7 @@ private fun InlinePlaceDetailSheet(
     onClose: () -> Unit,
     onBookmarkToggle: (UUID, Boolean) -> Unit,
     onReviewReactionToggle: (UUID, ReviewReactionType) -> Unit,
+    onReviewAuthorSelected: (UUID) -> Unit,
     onSubmitRating: (UUID, Int, Int, Int, String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -448,6 +455,7 @@ private fun InlinePlaceDetailSheet(
                     authorName = reviewAuthorNames[review.userUuid] ?: "Community-Mitglied",
                     isOwnReview = review.userUuid == currentUserUuid,
                     currentReaction = currentUserReactionTypes[review.uuid],
+                    onAuthorClick = { onReviewAuthorSelected(review.userUuid) },
                     onReactionToggle = { type -> onReviewReactionToggle(review.uuid, type) },
                 )
                 Spacer(Modifier.height(10.dp))
@@ -683,10 +691,12 @@ private fun ReviewCard(
     authorName: String,
     isOwnReview: Boolean,
     currentReaction: ReviewReactionType?,
+    onAuthorClick: () -> Unit,
     onReactionToggle: (ReviewReactionType) -> Unit,
 ) {
     var expanded by rememberSaveable(review.uuid.toString()) { mutableStateOf(false) }
     val reviewText = review.text.orEmpty()
+    val authorInitial = authorName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -695,13 +705,49 @@ private fun ReviewCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (isOwnReview) "$authorName · Du" else authorName,
-                    color = DarkInk,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
+                Surface(
+                    onClick = onAuthorClick,
                     modifier = Modifier.weight(1f),
-                )
+                    shape = RoundedCornerShape(15.dp),
+                    color = Color.Transparent,
+                    contentColor = DarkInk,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(end = 8.dp, top = 2.dp, bottom = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(30.dp),
+                            shape = CircleShape,
+                            color = Moss,
+                            contentColor = WarmSurface,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = authorInitial,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (isOwnReview) "$authorName · Du" else authorName,
+                                color = DarkInk,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = if (isOwnReview) "Dein Profil ansehen" else "Öffentliches Profil ansehen",
+                                color = LeafAccent,
+                                fontSize = 9.sp,
+                            )
+                        }
+                    }
+                }
                 Text(
                     text = REVIEW_DATE_FORMAT.format(Date(review.timestampMillis)),
                     color = DarkInk.copy(alpha = 0.55f),
