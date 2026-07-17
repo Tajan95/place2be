@@ -19,6 +19,11 @@ import java.util.UUID
  * Die Dateien in src/main/data/mockdata sind als unveraenderliche Assets
  * registriert. Beim ersten Zugriff werden sie nach filesDir/mockdata kopiert.
  * Alle Lese- und Schreiboperationen arbeiten danach auf diesen internen Dateien.
+ *
+ * Pro Ort bleiben hoechstens die 50 neuesten Rezensionstexte gespeichert. Wird
+ * die Grenze ueberschritten, wird nur das Textfeld der verdraengten Rezension auf
+ * null gesetzt. Numerische Kriterien, Nutzerbezug, Zeitstempel und Reaktionen
+ * bleiben als vollwertige Bewertungsdaten erhalten.
  */
 class MockPlaceDataSource private constructor(
     private val storageDirectory: File,
@@ -32,6 +37,7 @@ class MockPlaceDataSource private constructor(
             "Could not create mock data directory: ${storageDirectory.absolutePath}"
         }
         initializeStorage()
+        normalizeStoredReviewTexts()
     }
 
     fun getPlaces(): List<Place> = readList<PlaceJson>(MockDataFile.PLACES).map(PlaceJson::toDomain)
@@ -73,13 +79,23 @@ class MockPlaceDataSource private constructor(
         require(getPlace(review.placeUuid) != null) { "Unknown place ${review.placeUuid}." }
         require(getUser(review.userUuid) != null) { "Unknown user ${review.userUuid}." }
         val reviews = readListUnlocked<ReviewJson>(MockDataFile.REVIEWS)
-        require(reviews.none { it.uuid == review.uuid.toString() }) { "Review ${review.uuid} already exists." }
-        writeListUnlocked(MockDataFile.REVIEWS, reviews + ReviewJson.from(review))
-        review
+        val reviewJson = ReviewJson.from(review)
+        require(reviews.none { it.uuid == reviewJson.uuid }) { "Review ${review.uuid} already exists." }
+
+        val retainedReviews = retainNewestReviewTexts(reviews + reviewJson)
+        writeListUnlocked(MockDataFile.REVIEWS, retainedReviews)
+        retainedReviews.first { it.uuid == reviewJson.uuid }.toDomain()
     }
 
     fun updateReview(review: Review): Boolean = synchronized(fileLock) {
-        updateByUuid(MockDataFile.REVIEWS, ReviewJson.from(review)) { it.uuid }
+        val reviews = readListUnlocked<ReviewJson>(MockDataFile.REVIEWS)
+        val replacement = ReviewJson.from(review)
+        val index = reviews.indexOfFirst { it.uuid == replacement.uuid }
+        if (index < 0) return@synchronized false
+
+        val updatedReviews = reviews.toMutableList().apply { this[index] = replacement }
+        writeListUnlocked(MockDataFile.REVIEWS, retainNewestReviewTexts(updatedReviews))
+        true
     }
 
     fun deleteReview(uuid: UUID): Boolean = synchronized(fileLock) {
@@ -161,6 +177,50 @@ class MockPlaceDataSource private constructor(
         if (requiresNewSeed) versionFile.writeText(SEED_VERSION.toString(), Charsets.UTF_8)
     }
 
+    /**
+     * Bereinigt auch bereits bestehende lokale Arbeitskopien beim App-Start. So
+     * gilt die 50er-Grenze nicht nur fuer neu angelegte, sondern ebenso fuer vor
+     * dieser Regel gespeicherte Datenbestaende.
+     */
+    private fun normalizeStoredReviewTexts() = synchronized(fileLock) {
+        val reviews = readListUnlocked<ReviewJson>(MockDataFile.REVIEWS)
+        val retainedReviews = retainNewestReviewTexts(reviews)
+        if (retainedReviews != reviews) {
+            writeListUnlocked(MockDataFile.REVIEWS, retainedReviews)
+        }
+    }
+
+    /**
+     * Behaelt pro Ort die 50 neuesten nichtleeren Texte. Bei gleichem Zeitstempel
+     * gewinnt der spaeter gespeicherte Listeneintrag, wodurch eine gerade neu
+     * angelegte Rezension nicht durch einen gleichzeitigen Altbestand verdraengt
+     * wird. Ausschliesslich das Textfeld aelterer Eintraege wird entfernt.
+     */
+    private fun retainNewestReviewTexts(reviews: List<ReviewJson>): List<ReviewJson> {
+        val retainedTextReviewUuids = reviews
+            .withIndex()
+            .filter { indexedReview -> !indexedReview.value.text.isNullOrBlank() }
+            .groupBy { indexedReview -> indexedReview.value.placeUuid }
+            .values
+            .flatMap { reviewsForPlace ->
+                reviewsForPlace
+                    .sortedWith(
+                        compareByDescending<IndexedValue<ReviewJson>> { it.value.timestampMillis }
+                            .thenByDescending { it.index },
+                    )
+                    .take(MAX_STORED_TEXT_REVIEWS_PER_PLACE)
+            }
+            .mapTo(mutableSetOf()) { indexedReview -> indexedReview.value.uuid }
+
+        return reviews.map { storedReview ->
+            if (!storedReview.text.isNullOrBlank() && storedReview.uuid !in retainedTextReviewUuids) {
+                storedReview.copy(text = null)
+            } else {
+                storedReview
+            }
+        }
+    }
+
     private fun File.readTextOrNull(): String? = if (exists()) readText(Charsets.UTF_8) else null
 
     private inline fun <reified T> readList(dataFile: MockDataFile): List<T> = synchronized(fileLock) {
@@ -205,6 +265,7 @@ class MockPlaceDataSource private constructor(
         private const val ASSET_DIRECTORY = "mockdata"
         private const val SEED_VERSION_FILE = ".seed-version"
         private const val SEED_VERSION = 2
+        private const val MAX_STORED_TEXT_REVIEWS_PER_PLACE = 50
 
         fun create(context: Context): MockPlaceDataSource {
             val appContext = context.applicationContext

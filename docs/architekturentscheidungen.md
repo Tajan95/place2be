@@ -136,15 +136,17 @@ Nach einer abgegebenen Bewertung darf derselbe Nutzer denselben Ort erst 24 Stun
 
 **Konsequenz:** Die Regel liegt als `ReviewSubmissionCooldownPolicy` in der Domain-Schicht. Während der Sperrfrist werden Slider und Textfeld deaktiviert. Der Speichern-Button ist nicht klickbar, zeigt die verbleibende Zeit an und verwendet zur freundlichen Kennzeichnung einen Curry-/Goldton.
 
-## ADR-013: Textrezensionslisten sind auf 50 Einträge begrenzt
+## ADR-013: Textrezensionslisten und gespeicherte Texte sind auf 50 Einträge begrenzt
 
-**Status:** Anzeige entschieden, persistente Bereinigung noch umzusetzen
+**Status:** entschieden und für den Local-first-MVP persistent umgesetzt
 
 Sowohl „Rezent“ als auch „Beliebt“ zeigen pro Ort höchstens 50 Textrezensionen. Dadurch bleibt die Detailansicht bei stark frequentierten Orten performant und übersichtlich.
 
-Für „Rezent“ werden die 50 neuesten Texte angezeigt. Für „Beliebt“ werden die 50 höchsten zeitabhängigen Popularitätswerte angezeigt. Sobald die persistente Bereinigung umgesetzt wird, darf bei verdrängten Einträgen ausschließlich der Rezensionstext entfernt werden. Die numerischen Werte für Vibes, Sicherheit und Erreichbarkeit sowie der Zeitstempel bleiben erhalten und fließen weiterhin in den zeitlich gewichteten Orts-Score ein.
+Die lokale Datenhaltung bewahrt pro Ort ausschließlich die 50 neuesten nichtleeren Rezensionstexte auf. Sobald eine neuere Textrezension die Grenze überschreitet, wird beim ältesten verdrängten Eintrag ausschließlich `text` auf `null` gesetzt. UUID, Ort, Nutzerzuordnung, Vibes, Sicherheit, Erreichbarkeit, Zeitstempel sowie Like- und Dislike-Zähler bleiben unverändert gespeichert. Reine Zahlenbewertungen werden von der Textgrenze nicht berührt.
 
-**Konsequenz:** Die UI begrenzt die sichtbaren Listen bereits auf 50 Einträge. Das tatsächliche Entfernen verdrängter Texte aus der lokalen Datenhaltung wird in Issue #18 separat umgesetzt, damit keine numerischen Bewertungsdaten verloren gehen.
+Die Sortierung „Beliebt“ arbeitet innerhalb der noch gespeicherten Textrezensionen. Bei identischen Zeitstempeln wird deterministisch der später gespeicherte Eintrag bevorzugt. Bereits vorhandene lokale Datenbestände mit mehr als 50 Texten pro Ort werden beim Initialisieren der `MockPlaceDataSource` nach derselben Regel bereinigt.
+
+**Konsequenz:** `MockPlaceDataSource` erzwingt die Aufbewahrungsgrenze beim Erstellen und Aktualisieren von Rezensionen sowie beim App-Start. Die verdrängten numerischen Bewertungsdaten bleiben vollständig erhalten und fließen weiterhin in `CalculatePlaceScoreUseCase`, Jahreszähler, Nutzer-Score und private Bewertungshistorie ein; lediglich der nicht mehr aufbewahrte Freitext entfällt.
 
 ## ADR-014: Bewertungsanzahl als rollierender Ein-Jahres-Ausschnitt
 
