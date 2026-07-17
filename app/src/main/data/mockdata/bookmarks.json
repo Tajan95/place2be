@@ -1,14 +1,1 @@
-[
-  {
-    "uuid": "02dea0a7-e426-4955-8d6c-711ca1a1e42d",
-    "userUuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
-    "placeUuid": "e31093f8-b56e-45f9-b0e3-6f93a8db517e",
-    "createdAtMillis": 1783775430000
-  },
-  {
-    "uuid": "a9c87efe-799d-4c04-848b-8fa6d672d882",
-    "userUuid": "f5257520-3685-4a1a-be5b-4a0ceb1baba7",
-    "placeUuid": "9bd7082b-8c4b-4d67-b91e-6bb03cd405e4",
-    "createdAtMillis": 1783516230000
-  }
-]
+[]
