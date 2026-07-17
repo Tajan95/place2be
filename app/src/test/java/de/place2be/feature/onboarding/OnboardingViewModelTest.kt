@@ -38,12 +38,12 @@ class OnboardingViewModelTest {
         }
 
         assertEquals(4, pages.size)
-        assertTrue(completeText.contains("oeffentliche"))
+        assertTrue(completeText.contains("öffentliche"))
         assertTrue(completeText.contains("Mock-Map"))
         assertTrue(completeText.contains("Vibes"))
         assertTrue(completeText.contains("Sicherheit"))
         assertTrue(completeText.contains("Erreichbarkeit"))
-        assertTrue(completeText.contains("staerker"))
+        assertTrue(completeText.contains("stärker"))
         assertTrue(completeText.contains("Standort"))
     }
 
