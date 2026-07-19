@@ -10,19 +10,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Slider
@@ -170,6 +176,7 @@ fun MapScreenWithRatingEntry(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InlinePlaceDetailSheet(
     place: MapPlaceUiState,
@@ -217,25 +224,13 @@ private fun InlinePlaceDetailSheet(
         modifier = modifier
             .fillMaxWidth()
             .height(PLACE_DETAIL_EXPANDED_HEIGHT)
-            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "×",
-                color = DarkInk.copy(alpha = 0.65f),
-                fontSize = 26.sp,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .clickable(onClick = onClose)
-                    .padding(horizontal = 4.dp),
-            )
-        }
-
         PlaceSummary(
             place = place,
             onBookmarkToggle = onBookmarkToggle,
+            onClose = onClose
         )
         Spacer(Modifier.height(12.dp))
         AggregatedRatings(place)
@@ -468,6 +463,7 @@ private fun InlinePlaceDetailSheet(
 private fun PlaceSummary(
     place: MapPlaceUiState,
     onBookmarkToggle: (UUID, Boolean) -> Unit,
+    onClose: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -491,14 +487,45 @@ private fun PlaceSummary(
         }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = place.name,
-                color = DarkInk,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = place.name,
+                    color = DarkInk,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.Bottom)
+                )
+                Row(
+                    modifier = Modifier.requiredWidth(90.dp),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        onClick = { onBookmarkToggle(place.uuid, !place.isBookmarked) },
+                    ) {
+                        Icon(
+                            imageVector = if (place.isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (place.isBookmarked) "Gespeichert" else "Nicht gespeichert",
+                            tint = if (place.isBookmarked) Color.Red.copy(0.7f) else DarkInk
+                        )
+                    }
+                    IconButton(
+                        onClick = onClose
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
+                    }
+                }
+            }
+
             Text(
                 text = place.description,
                 color = DarkInk.copy(alpha = 0.7f),
@@ -511,19 +538,6 @@ private fun PlaceSummary(
                 color = LeafAccent,
                 fontSize = 10.sp,
                 maxLines = 1,
-            )
-        }
-        Surface(
-            onClick = { onBookmarkToggle(place.uuid, !place.isBookmarked) },
-            modifier = Modifier.padding(start = 4.dp),
-            shape = RoundedCornerShape(50),
-            color = Color.Transparent,
-            contentColor = Moss,
-        ) {
-            Text(
-                text = if (place.isBookmarked) "♥" else "♡",
-                fontSize = 25.sp,
-                modifier = Modifier.padding(8.dp),
             )
         }
     }
