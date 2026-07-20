@@ -70,9 +70,19 @@ Größere Funktionsbereiche besitzen Compose-Screens und ViewModel-artige Klasse
 
 Die aktuelle Implementierung verwendet bewusst schlanke Kotlin-Klassen statt durchgängig von `androidx.lifecycle.ViewModel` abzuleiten. App-Navigation wird über speicherbaren Compose-Zustand statt Navigation Compose gesteuert.
 
-**Begründung:** Die Trennung macht Score- und Regelwerke testbar, ohne für den begrenzten MVP zusätzlich ein vollständiges Dependency-Injection-, Navigation- und Lifecycle-Setup einzuführen.
+### Zustand in Jetpack Compose
 
-**Konsequenz:** Eine spätere technische Härtung kann native Lifecycle-ViewModels, `SavedStateHandle`, Navigation Compose und Dependency Injection ergänzen. Die fachlichen Use Cases und Repository-Grenzen bleiben davon weitgehend unabhängig.
+Zustand wird nach Möglichkeit nach oben verlagert (**State Hoisting**). Untergeordnete Composables erhalten vorbereitete Daten und melden Aktionen über Callbacks zurück.
+
+- **Stateless Composables** erhalten ihren sichtbaren Zustand vollständig über Parameter und greifen nicht selbst auf Repositories oder fachliche Datenquellen zu.
+- **Stateful Composables** halten oder koordinieren UI-Zustand, beispielsweise über `remember`, `rememberSaveable` oder ViewModel-artige State-Holder.
+- `Place2BeApp` bildet die stateful Composition Root für Repository-Zusammensetzung, Zielzustände, ausgewählten Ort, betrachtetes Profil und Datenrevisionen.
+- Kleinere Darstellungskomponenten wie Filterzeilen, Rating-Pills und Listenzeilen bleiben möglichst stateless.
+- Im integrierten Map-/Detail-Flow verbleibt bewusst lokaler UI-Zustand für Slider, Rezensionstext, Sortierung, Aufklappen und Scrollposition.
+
+**Begründung:** Die Trennung macht Score- und Regelwerke testbar, ohne für den begrenzten MVP zusätzlich ein vollständiges Dependency-Injection-, Navigation- und Lifecycle-Setup einzuführen. State Hoisting reduziert gleichzeitig unnötige Kopplung und erleichtert die Wiederverwendung kleiner UI-Komponenten.
+
+**Konsequenz:** Eine spätere technische Härtung kann native Lifecycle-ViewModels, `SavedStateHandle`, Navigation Compose und Dependency Injection ergänzen. Komplexe Screens können weiter in State-Holder und stateless Unterkomponenten zerlegt werden. Die fachlichen Use Cases und Repository-Grenzen bleiben davon weitgehend unabhängig.
 
 ## ADR-008: Mock-Map und zusammenhängendes Bottom-Sheet
 
@@ -128,7 +138,7 @@ Eine chronologische Liste bewerteter Orte wird öffentlich nicht zusammengeführ
 
 Nach dem Speichern wird die Repository-Schicht erneut gelesen. Eine neue Textrezension erscheint dadurch unmittelbar im Review-Bereich desselben Bottom-Sheets.
 
-Die Sortierung **Rezent** ordnet nach Zeitstempel. **Beliebt** verwendet Netto-Reaktionen und eine logarithmisch wachsende Altersstrafe.
+Die Sortierung **Rezent** ordnet nach Zeitstempel. **Beliebt** verwendet Netto-Reaktionen und eine logarithmisch wachsende Altersstrafe. Die sichtbare Bezeichnung `Rezent` wird mit Issue #36 in das verständlichere `Zuletzt` geändert; die interne Semantik bleibt identisch.
 
 **Konsequenz:** Eingabe, sichtbare Rückmeldung, Auf- und Einklappen, Reaktionen sowie Sortierung bilden einen zusammenhängenden Review-Flow.
 
@@ -146,7 +156,7 @@ Derselbe Nutzer darf denselben Ort erst 24 Stunden nach seiner letzten Bewertung
 
 **Status:** entschieden und persistent umgesetzt
 
-Die Ansichten **Rezent** und **Beliebt** zeigen pro Ort höchstens 50 Textrezensionen. Die lokale Datenhaltung bewahrt ebenfalls nur die 50 neuesten nichtleeren Texte auf.
+Die zeitbasierte Ansicht und **Beliebt** zeigen pro Ort höchstens 50 Textrezensionen. Die lokale Datenhaltung bewahrt ebenfalls nur die 50 neuesten nichtleeren Texte auf.
 
 Wird ein älterer Text verdrängt, wird ausschließlich `text` auf `null` gesetzt. UUID, Ort, Nutzer, Kriterienwerte, Zeitstempel und Reaktionszähler bleiben erhalten. Bereits vorhandene übergroße lokale Datenbestände werden beim Initialisieren normalisiert.
 

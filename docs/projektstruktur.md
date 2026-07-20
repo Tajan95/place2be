@@ -86,7 +86,7 @@ Bewertung + Textrezension + vorhandene Reviews
 eigenes oder öffentliches Profil
 ```
 
-Die eigentliche Ortsdetail- und Bewertungsinteraktion ist im MVP in `MapScreenWithRatingEntry` integriert. Die separaten `PlaceDetailScreen`- und `RatingScreen`-Dateien bilden weiterhin die fachliche Feature-Struktur bzw. vorbereitete Einzelkomponenten ab, sind aber nicht der primäre Navigationspfad der Live-Demo.
+Die eigentliche Ortsdetail- und Bewertungsinteraktion ist im MVP in `MapScreenWithRatingEntry` integriert. Die separaten `PlaceDetailScreen`- und `RatingScreen`-Dateien bilden weiterhin die fachliche Feature-Struktur beziehungsweise vorbereitete Einzelkomponenten ab, sind aber nicht der primäre Navigationspfad der Live-Demo.
 
 ## App-Schicht
 
@@ -102,6 +102,83 @@ Die eigentliche Ortsdetail- und Bewertungsinteraktion ist im MVP in `MapScreenWi
 
 Die Navigation wird im MVP über `rememberSaveable` und einen kleinen Zielzustand umgesetzt. Navigation Compose bleibt eine spätere technische Erweiterung.
 
+## Stateful und stateless Composables
+
+Jetpack Compose trennt nicht zwingend nach eigenen Klassen zwischen stateful und stateless. Entscheidend ist, wo der Zustand gehalten wird und ob eine Komponente ihre Darstellung vollständig über Parameter erhält.
+
+### Stateless Composables
+
+Stateless Composables:
+
+- erhalten ihren sichtbaren Zustand über Parameter,
+- melden Interaktionen über Callbacks nach außen,
+- besitzen keine eigene fachliche Datenquelle,
+- lassen sich leichter wiederverwenden, testen und in Previews darstellen.
+
+Typische Beispiele im Projekt sind kleine Darstellungskomponenten wie:
+
+- Rating-Pills,
+- Filterzeilen,
+- Listenzeilen für Orte,
+- Review- oder Profil-Unterkomponenten, sofern Daten und Aktionen vollständig übergeben werden.
+
+Eine stateless Signatur folgt sinngemäß diesem Muster:
+
+```kotlin
+@Composable
+fun FilterOptionRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+)
+```
+
+Die Komponente kennt weder Repository noch JSON-Dateien und entscheidet nicht selbst, welche Option fachlich ausgewählt ist.
+
+### Stateful Composables
+
+Stateful Composables:
+
+- halten oder koordinieren UI-Zustand,
+- verwenden beispielsweise `remember` oder `rememberSaveable`,
+- kombinieren mehrere Datenquellen oder State-Holder,
+- geben vorbereiteten Zustand an untergeordnete Komponenten weiter.
+
+`Place2BeApp` bildet im MVP die stateful **Composition Root**. Dort werden Repositories, Use Cases, Navigation, ausgewählter Ort, betrachtetes Profil und `dataRevision` zusammengeführt.
+
+Auch `MapScreenWithRatingEntry` enthält bewusst lokalen UI-Zustand, etwa für:
+
+- Sliderwerte,
+- optionalen Rezensionstext,
+- Auf- und Einklappen des Textfelds,
+- Review-Sortierung,
+- Speicherbestätigung,
+- Scrollposition des Bottom-Sheets.
+
+### State Hoisting
+
+Das bevorzugte Muster lautet:
+
+```text
+Stateful Parent
+  → gibt Zustand und Callbacks weiter
+Stateless Child
+  → rendert Daten und meldet Aktionen zurück
+```
+
+Die Fachlogik bleibt dabei außerhalb der UI. Ein Composable darf beispielsweise anzeigen, ob ein Ort gespeichert ist, aber die persistente Bookmark-Operation wird über einen Callback an Repository- beziehungsweise App-Schicht zurückgegeben.
+
+### Pragmatische MVP-Grenze
+
+Der aktuelle MVP ist nicht vollständig „stateless bis zum letzten Screen“. Einige komplexe Interaktionszustände verbleiben lokal im integrierten Map-/Detail-Flow, um die Demo stabil und den Codeumfang kontrollierbar zu halten.
+
+Eine spätere technische Weiterentwicklung könnte:
+
+- mehr Zustand in native Lifecycle-`ViewModel`-Klassen verschieben,
+- `SavedStateHandle` für wiederherstellbaren Navigationszustand verwenden,
+- Navigation Compose integrieren,
+- komplexe Screens in kleinere State-Holder und stateless Unterkomponenten zerlegen.
+
 ## Feature-Schicht
 
 ### Map
@@ -115,7 +192,9 @@ Die Navigation wird im MVP über `rememberSaveable` und einen kleinen Zielzustan
 - `RatingViewModel.kt` validiert und speichert Bewertungen.
 - `ReviewSubmissionCooldownPolicy` erzwingt die 24-Stunden-Regel.
 - Reviews erscheinen nach dem Speichern sofort erneut aus dem Repository.
-- Rezent- und Beliebt-Sortierung, Text-Aufklappen und Reaktionen liegen im integrierten Ortsflow.
+- Zeitbasierte und Beliebt-Sortierung, Text-Aufklappen und Reaktionen liegen im integrierten Ortsflow.
+
+Die sichtbare zeitbasierte Sortierung wird mit Issue #36 von `Rezent` zu `Zuletzt` umbenannt; der interne Wert `RECENT` kann bestehen bleiben.
 
 ### Profil
 
@@ -173,6 +252,7 @@ Eine spätere Account-Lösung müsste zusätzliche Komponenten für Authentifizi
 - ViewModel-artige Klassen leiten nicht durchgängig von `androidx.lifecycle.ViewModel` ab.
 - Navigation Compose wird nicht verwendet.
 - Dependency Injection erfolgt manuell in `Place2BeApp`.
+- Ein Teil des komplexen Screen-Zustands verbleibt lokal in Composables.
 - Standortbestätigung ist simuliert.
 - Daten sind lokal und nicht zwischen Geräten synchronisiert.
 
@@ -185,5 +265,7 @@ Diese Punkte sind dokumentierte technische Erweiterungen und keine versteckten p
 - Fachliche Regeln liegen in `domain/usecase`.
 - Datenobjekte liegen in `domain/model`.
 - Datenzugriff erfolgt über `domain/repository`.
+- Zustand wird nach Möglichkeit nach oben verlagert und über Parameter weitergegeben.
+- Untergeordnete Darstellungskomponenten bleiben möglichst stateless.
 - Öffentliche Profile erhalten ohne neue Datenschutzentscheidung keine chronologische Ortshistorie.
 - Eine spätere Backend- oder Account-Anbindung darf Local-first-Entscheidungen nicht stillschweigend in öffentliche Datenfreigaben umwandeln.
