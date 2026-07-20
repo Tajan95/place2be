@@ -1,6 +1,5 @@
 package de.place2be.feature.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +45,6 @@ import de.place2be.ui.theme.Moss
 import de.place2be.ui.theme.PureWhite
 import de.place2be.ui.theme.SafetyBlue
 import de.place2be.ui.theme.SheetHandle
-import de.place2be.ui.theme.Terracotta
 import de.place2be.ui.theme.WarmSurface
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -150,9 +151,11 @@ private fun ProfileTopBar(
             contentColor = Moss,
             modifier = Modifier.size(44.dp),
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("‹", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
-            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Zurück",
+                modifier = Modifier.padding(12.dp),
+            )
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {

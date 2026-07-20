@@ -7,15 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,16 +25,27 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,19 +69,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.place2be.domain.model.PlaceCategory
 import de.place2be.domain.model.PlaceAttribute
+import de.place2be.domain.model.PlaceCategory
 import de.place2be.ui.component.RatingCriterion
 import de.place2be.ui.component.RatingCriterionIcon
 import de.place2be.ui.theme.AccessibilityGold
@@ -383,8 +391,14 @@ private fun MapHeader() {
                 .height(68.dp)
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text(text = "≡", color = Moss, fontSize = 30.sp, modifier = Modifier.width(38.dp))
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Menü",
+                tint = DarkInk,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Box(
                 modifier = Modifier
                     .size(27.dp)
@@ -392,7 +406,12 @@ private fun MapHeader() {
                     .background(LeafAccent),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("↗", color = PureWhite, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "↗",
+                    color = PureWhite,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.offset(y = (-1).dp))
             }
             Spacer(Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -402,6 +421,7 @@ private fun MapHeader() {
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
                     letterSpacing = (-0.6).sp,
+                    modifier = Modifier.offset(y = 3.dp)
                 )
                 Text(text = "Deine Orte. Dein Wohlbefinden.", color = LeafAccent, fontSize = 10.sp)
             }
@@ -541,7 +561,7 @@ private fun DefaultMapControls(
         modifier = modifier
             .navigationBarsPadding()
             .fillMaxWidth()
-            .padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
+            .padding(start = 14.dp, end = 14.dp, top = 10.dp),
     ) {
         Text(
             text = "Was möchtest du entdecken?",
@@ -551,27 +571,62 @@ private fun DefaultMapControls(
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
         )
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            ShortcutButton(
-                label = if (activeFilterCount == 0) "Filtern" else "Filter ($activeFilterCount)",
-                symbol = "⌁",
-                active = activeFilterCount > 0,
+        NavigationBar(
+            containerColor = LeafSurface,
+            contentColor = DarkInk,
+            tonalElevation = 4.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(65.dp)
+                .clip(RoundedCornerShape(16.dp)),
+        ) {
+            NavigationBarItem(
+                selected = false,
                 onClick = onFilterClick,
-                modifier = Modifier.weight(1f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.FilterAlt,
+                        contentDescription = "Filter",
+                    )
+                },
+                label = {
+                    Text(
+                        text = if (activeFilterCount == 0) "Filtern" else "Filter ($activeFilterCount)",
+                        fontSize = 12.sp,
+                    )
+                },
             )
-            ShortcutButton(
-                label = "Beliebt",
-                symbol = "★",
-                active = false,
+            NavigationBarItem(
+                selected = false,
                 onClick = onPopularClick,
-                modifier = Modifier.weight(1f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Beliebt",
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Beliebt",
+                        fontSize = 12.sp,
+                    )
+                },
             )
-            ShortcutButton(
-                label = "Gespeichert",
-                symbol = "♡",
-                active = false,
+            NavigationBarItem(
+                selected = false,
                 onClick = onSavedClick,
-                modifier = Modifier.weight(1f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Gespeichert",
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Gespeichert",
+                        fontSize = 12.sp,
+                    )
+                },
             )
         }
         if (activeFilterCount > 0) {
@@ -746,14 +801,13 @@ private fun MapPanelHeader(
                         .padding(8.dp),
                 )
             }
-            Text(
-                text = "×",
-                color = DarkInk.copy(alpha = 0.65f),
-                fontSize = 26.sp,
-                modifier = Modifier
-                    .clickable(onClick = onClose)
-                    .padding(start = 8.dp, end = 4.dp),
-            )
+            IconButton(onClose) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Schließen",
+                    tint = DarkInk.copy(alpha = 0.65f),
+                )
+            }
         }
     }
 }
