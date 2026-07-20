@@ -1,33 +1,184 @@
 # Demo-Runbook für die Präsentation am 27.07.2026
 
-Dieses Runbook beschreibt einen reproduzierbaren Live-Demo-Ablauf für den place2be-MVP. Es ergänzt die fachliche Präsentation und soll verhindern, dass wichtige Funktionen, Einschränkungen oder Datenschutzentscheidungen im Vortrag vergessen werden.
+Dieses Runbook beschreibt den gemeinsamen Präsentations- und Live-Demo-Ablauf für den place2be-MVP. Es wurde nach dem Blindtest und Abschlussmeeting vom 20.07.2026 gestrafft.
 
-## 1. Ziel der Demo
+Die ausführlichen Meeting-Ergebnisse stehen in [`meeting-notes-2026-07-20.md`](meeting-notes-2026-07-20.md).
 
-Die Demo soll in etwa 7 bis 9 Minuten zeigen:
+## 1. Ziel und roter Faden
 
-1. was place2be lösen soll,
-2. wie ein neuer Nutzer die App versteht,
-3. wie Orte entdeckt, gespeichert und bewertet werden,
-4. wie aktuelle Bewertungen stärker zählen,
-5. wie Reviews und Reaktionen funktionieren,
-6. wie Nutzer-Score und Profile umgesetzt sind,
-7. welche Architektur- und Datenschutzentscheidungen getroffen wurden,
-8. welche Funktionen bewusst außerhalb des MVP liegen.
+Die Präsentation soll nicht nur die fertige Oberfläche zeigen, sondern den nachvollziehbaren Weg von der Idee über Issues und Prototypen bis zur Android-Implementierung.
 
-## 2. Empfohlene Rollenverteilung
+Der rote Faden lautet:
 
-Die genaue Zuordnung kann das Team vor der Präsentation festlegen.
+```text
+GitHub und Prototypen
+        ↓
+README und Produktidee
+        ↓
+Onboarding und fachliche Kernlogik
+        ↓
+kompakte Live-Demo
+        ↓
+technische Architektur
+        ↓
+Limitationen und Ausblick
+```
 
-- **Moderation / Produktidee:** Problem, Zielgruppe, Onboarding und Übergänge.
-- **Live-Bedienung:** Map, Ortsdetail, Bookmark, Bewertung, Reviews und Profile.
-- **Technik / Architektur:** Local-first, Schichten, Score-Logik, Datenschutz und Ausblick.
+Die App-Demo selbst soll möglichst geradlinig bleiben. Detailwissen, alternative Stationen und Fallbacks stehen weiter unten als Nachschlagewerk.
 
-Eine Person sollte die App durchgehend bedienen. Sprecherwechsel erfolgen an klaren fachlichen Übergängen, nicht während kritischer Eingaben.
+## 2. Kompakter Hauptablauf
 
-## 3. Vorbereitung am Präsentationstag
+### Phase A: GitHub, Issues und Prototypen
 
-### 3.1 Repository und Tests
+**Ziel:** zeigen, wie das Team Anforderungen, Bugs und Entscheidungen organisiert hat.
+
+**Zu zeigen:**
+
+- Repository-Startseite,
+- Issue-Liste,
+- ein abgeschlossenes Feature-Issue,
+- ein Bug- oder Nachbesserungs-Issue,
+- handschriftliche Prototypen beziehungsweise Mockup-Notizen,
+- Commit- oder Pull-Request-Verlauf nur kurz.
+
+**Kernaussage:**
+
+> Wir haben die App iterativ entwickelt: aus Meeting- und Mockup-Notizen wurden Issues, aus Issues getrennte Branches und aus getesteten Branches nachvollziehbare Pull Requests.
+
+### Phase B: Android Studio und Produktidee
+
+**Zu zeigen:**
+
+- Android Studio mit geöffneter Projektstruktur,
+- `README.md`,
+- optional kurz `docs/architekturentscheidungen.md`.
+
+**Kernaussagen:**
+
+- place2be hilft, öffentliche und niedrigschwellig nutzbare Orte zu entdecken,
+- bewertet werden Vibes, Sicherheit und Erreichbarkeit,
+- aktuelle Eindrücke zählen stärker als alte,
+- der MVP ist local-first und offline demonstrierbar.
+
+Danach die App starten.
+
+### Phase C: Onboarding und Bewertungslogik
+
+Die vier Onboarding-Seiten nacheinander zeigen, ohne jede Textzeile vorzulesen.
+
+**Erklären:**
+
+- Produktzweck,
+- Mock-Map und Bottom-Sheet,
+- Vibes, Sicherheit und Erreichbarkeit,
+- Bewertungsalterung,
+- simulierte Vor-Ort-Bestätigung.
+
+**Zeitgewichtung:**
+
+```text
+Gewicht = 1 / (1 + Alter_in_Tagen × 0,05)
+```
+
+Beispiele:
+
+- neue Bewertung: Gewicht `1,0`,
+- 30 Tage alte Bewertung: Gewicht `0,4`.
+
+Alte Bewertungen werden nicht gelöscht, sondern beeinflussen das aktuelle Bild schwächer.
+
+**Schutz vor einfacher Score-Maximierung:**
+
+- 24-Stunden-Sperre pro Nutzer und Ort,
+- abnehmender Bonus für immer weitere Orte,
+- Begrenzung naher Ortscluster,
+- Tagesgrenzen für Reaktionsaktivität,
+- logarithmisch wachsende Reputation,
+- Obergrenze pro hilfreicher Rezension.
+
+### Phase D: Kompakte Live-Demo
+
+Der bevorzugte Kernflow lautet:
+
+```text
+Mock-Map
+  → Ort auswählen
+  → Bookmark setzen
+  → Detail und Kriterien zeigen
+  → Bewertung mit Text speichern
+  → Reviews und Reaktion zeigen
+  → eigenes und öffentliches Profil vergleichen
+```
+
+Nicht in jeder Station lange verweilen. Die fachliche Wirkung der Aktion ist wichtiger als das vollständige Vorlesen aller UI-Texte.
+
+### Phase E: Technische Architektur
+
+Nach dem fachlichen Flow übernimmt Morris den Architekturteil.
+
+**Empfohlener Übergabesatz:**
+
+> Damit haben wir gezeigt, was place2be fachlich leistet und wie wir veraltete oder leicht manipulierbare Bewertungen begrenzen. Morris erklärt jetzt, wie wir diese Funktionen mit Jetpack Compose, einer MVVM-orientierten Struktur und Repository-Grenzen technisch aufgebaut haben.
+
+Zu behandeln sind:
+
+- Android- und Kotlin-Konventionen,
+- Jetpack Compose,
+- MVVM-orientierte Struktur,
+- Repository Pattern,
+- Domain-/Data-Trennung,
+- stateful und stateless Composables,
+- bekannte technische MVP-Kompromisse.
+
+### Phase F: Limitationen, Ausblick und Abschluss
+
+Bewusst nicht umgesetzt:
+
+- Live-Karte,
+- echte GPS- und Mindestaufenthaltsprüfung,
+- produktive Registrierung und Kontoverwaltung,
+- Backend und Mehrgeräte-Synchronisation,
+- serverseitige Moderation und Manipulationsschutz,
+- vollständige Navigation-Compose- und Lifecycle-ViewModel-Integration.
+
+Diese Punkte als bewusste Scope-Entscheidungen darstellen, nicht als überraschend fehlende Funktionen.
+
+## 3. Vorläufige Rollenverteilung
+
+Die Rollen können in der Generalprobe noch angepasst werden.
+
+### Tajan
+
+- Produktidee und Zielgruppe,
+- README und Übergang in die App,
+- Onboarding,
+- Zeitverfall und Schutz vor Score-Maximierung,
+- Moderation oder Bedienung des fachlichen Kernflows.
+
+### Morris
+
+- Android-Konventionen,
+- Jetpack Compose,
+- MVVM-orientierte Struktur,
+- Repository Pattern,
+- Domain-/Data-Trennung,
+- stateful und stateless Composables,
+- technische Kompromisse.
+
+### Artem
+
+Geeignete Blöcke:
+
+- GitHub, Issues und Entwicklungsprozess,
+- Prototypen und Übergang vom Mockup zur App,
+- Limitationen und Ausblick,
+- alternativ Unterstützung bei Live-Bedienung und Fallback-Material.
+
+Eine Person sollte die App durchgehend bedienen. Sprecherwechsel erfolgen an fachlichen Übergängen, nicht während Eingaben oder Animationen.
+
+## 4. Vorbereitung am Präsentationstag
+
+### 4.1 Repository und Tests
 
 ```powershell
 git checkout main
@@ -37,7 +188,7 @@ git pull origin main
 
 Erwartung: `BUILD SUCCESSFUL`.
 
-Optional zusätzlich ein installierbares Debug-APK vorbereiten:
+Optional zusätzlich ein Debug-APK vorbereiten:
 
 ```powershell
 .\gradlew.bat assembleDebug
@@ -49,18 +200,18 @@ Erwarteter Pfad:
 app\build\outputs\apk\debug\app-debug.apk
 ```
 
-Das APK vor der Präsentation zusätzlich außerhalb des Projektordners sichern.
+Das APK zusätzlich außerhalb des Projektordners sichern.
 
-### 3.2 Emulator
+### 4.2 Emulator
 
-Empfohlener, bereits erprobter Zustand:
+Erprobter Zustand:
 
-- Pixel 9
-- API 36
-- Emulator vollständig gestartet
-- Android Studio und PowerShell geöffnet
+- Pixel 9,
+- API 36,
+- Emulator vor dem ADB-Befehl vollständig gestartet,
+- Android Studio und PowerShell geöffnet.
 
-ADB-Verbindung prüfen:
+ADB prüfen:
 
 ```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
@@ -73,7 +224,7 @@ List of devices attached
 emulator-5554    device
 ```
 
-### 3.3 Reproduzierbaren Ausgangszustand herstellen
+### 4.3 Frischen Ausgangszustand herstellen
 
 ```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell pm clear de.place2be
@@ -90,266 +241,139 @@ Der frische Demo-Zustand besitzt:
 - Nutzer-Score `0`,
 - leere private Historie,
 - keine gespeicherten Orte,
-- vorhandene Seed-Orte, Seed-Reviews und fremde Community-Profile.
+- Seed-Orte, Seed-Reviews und fremde Community-Profile.
 
-### 3.4 Präsentationsmaterial als Fallback
+### 4.4 Präsentationsmaterial als Fallback
 
 Vorher vorbereiten:
 
-- Bildschirmaufnahme des vollständigen Demo-Flows,
-- Screenshots jeder Runbook-Station,
+- Bildschirmaufnahme des vollständigen Flows,
+- Screenshots der wichtigsten Stationen,
 - Debug-APK,
-- lokale Kopie des Repositories,
-- Folie mit Architekturübersicht,
-- Folie oder Screenshot der Score-Formel,
-- Folie mit MVP-Abgrenzung.
+- lokale Repository-Kopie,
+- Architekturübersicht,
+- Score-Formel,
+- MVP-Abgrenzung,
+- Bilder der Prototypen.
 
-Die App ist local-first und benötigt für den normalen Flow kein Internet.
+Die App benötigt im normalen Local-first-Flow kein Internet.
 
-## 4. Live-Demo-Ablauf
+## 5. Detaillierter App-Demo-Ablauf
 
 ## Station 1: Erststart und Onboarding
 
-**Aktion**
+**Aktion:** App nach dem Daten-Reset starten und die vier Seiten zügig durchgehen.
 
-App nach dem Daten-Reset starten und die vier Seiten nacheinander öffnen.
-
-**Sprechtext / Kernaussagen**
-
-- place2be hilft, öffentliche und niedrigschwellige Orte zu entdecken.
-- Die Karte ist für den MVP bewusst stilisiert.
-- Bewertet werden Vibes, Sicherheit und Erreichbarkeit.
-- Aktuelle Bewertungen zählen stärker als alte.
-- Eine echte Standortprüfung ist fachlich vorgesehen, im MVP aber simuliert.
-
-**Zu zeigen**
+**Zu zeigen:**
 
 - Fortschrittsanzeige,
 - `Weiter` und `Zurück`,
-- abschließender Button `Karte öffnen`.
+- `Karte öffnen`.
 
-**Optionaler Technikhinweis**
+**Technikhinweis:** Der Abschluss wird als boolescher Wert in app-internen `SharedPreferences` gespeichert. Derselbe Inhalt ist später im eigenen Profil als Hilfe erreichbar.
 
-Der Abschluss wird als boolescher Wert in app-internen `SharedPreferences` gespeichert. Beim nächsten App-Start bleibt das Onboarding aus; derselbe Inhalt ist später im eigenen Profil als Hilfe erreichbar.
+## Station 2: Mock-Map und Bookmark
 
-## Station 2: Mock-Map und Default-Schnellzugriffe
+**Aktion:** Onboarding abschließen, `Gespeicherte Orte` kurz leer zeigen, dann einen Ort auswählen und das Herz aktivieren.
 
-**Aktion**
+**Empfohlener Ort:** `Goetheplatz` oder `Mainufer`.
 
-Onboarding abschließen. Auf der Karte kurz Marker und Bottom-Sheet zeigen.
+**Kernaussagen:**
 
-**Sprechtext / Kernaussagen**
+- Die Mock-Map zeigt den mobilen Interaktionsfluss ohne Karten-SDK und API-Key.
+- Marker und Listen führen in denselben Ortskontext.
+- Der frische Demo-Nutzer beginnt absichtlich ohne Bookmarks.
+- Das gesetzte Bookmark wird lokal persistent gespeichert.
 
-- Die Mock-Map demonstriert den mobilen Interaktionsfluss ohne Karten-SDK und API-Key.
-- Die Default-Ansicht bietet Filter, beliebte Orte und gespeicherte Orte.
-- Marker und Listen führen in dieselbe Ortsansicht.
+## Station 3: Ortsdetail und Bewertung
 
-**Zu zeigen**
+**Aktion:** Bottom-Sheet erweitern, Beschreibung, Tags und drei Kriterien zeigen. Danach zum Bewertungsbereich scrollen.
 
-- einen oder zwei Marker,
-- Schnellzugriffe,
-- leere Liste unter `Gespeicherte Orte`.
-
-**Wichtiger Hinweis**
-
-Die leere Favoritenliste ist beabsichtigt. Sie zeigt, dass der Demo-Nutzer als neuer Nutzer startet und Bookmarks erst während der Demo erzeugt.
-
-## Station 3: Ort auswählen und Mini-Preview
-
-**Empfohlener Ort:** `Goetheplatz` oder alternativ `Mainufer`.
-
-**Aktion**
-
-Ort über Marker oder Liste auswählen.
-
-**Sprechtext / Kernaussagen**
-
-- Die Karte bleibt sichtbar.
-- Eine kompakte Mini-Preview zeigt den wichtigsten Kontext.
-- Das Bottom-Sheet kann zur vollständigen Detailansicht erweitert werden.
-
-**Zu zeigen**
-
-- Name und Ortsangabe,
-- aggregierten Score,
-- Übergang vom Peek-Zustand zur Detailansicht.
-
-## Station 4: Ortsdetail und Bookmark
-
-**Aktion**
-
-Detailansicht erweitern und das Herz-/Bookmark-Icon aktivieren.
-
-**Sprechtext / Kernaussagen**
-
-- Der Ort enthält Beschreibung, Tags und getrennte Kriterienwerte.
-- Bookmark-Aktionen werden lokal persistent gespeichert.
-- Der ausgewählte Ort erscheint anschließend unter `Gespeicherte Orte`.
-
-**Zu zeigen**
-
-- Beschreibung und Ortseigenschaften,
-- Vibes, Sicherheit und Erreichbarkeit,
-- Bookmark-Zustandswechsel,
-- optional Rückkehr zur gespeicherten Liste.
-
-## Station 5: Bewertungslogik erklären
-
-**Aktion**
-
-Zum Bewertungsbereich scrollen, aber noch nicht sofort speichern.
-
-**Sprechtext / Kernaussagen**
-
-- Jedes Kriterium wird von 1 bis 5 bewertet.
-- Die drei Kriterien werden getrennt zeitgewichtet.
-- Der Gesamtwert ist der Mittelwert der gewichteten Kriterienwerte.
-- Eine Bewertung ist fachlich nur vor Ort zulässig.
-- Für die stabile Demo ist die Vor-Ort-Bestätigung simuliert.
-
-**Formel**
-
-```text
-Gewicht = 1 / (1 + Alter_in_Tagen × 0,05)
-```
-
-**Beispiel**
-
-- neue Bewertung: Gewicht `1,0`,
-- 30 Tage alte Bewertung: Gewicht `0,4`.
-
-Alte Bewertungen werden nicht gelöscht, sondern beeinflussen das aktuelle Bild schwächer.
-
-## Station 6: Bewertung und Textrezension abgeben
-
-**Aktion**
-
-Beispielwerte auswählen, etwa:
+Beispielwerte:
 
 - Vibes: `4`,
 - Sicherheit: `3`,
 - Erreichbarkeit: `5`.
 
-Optionalen Text mit mindestens 20 Zeichen eingeben, zum Beispiel:
+Optionaler Text:
 
 ```text
 Angenehmer Treffpunkt mit guter Anbindung.
 ```
 
-Bewertung speichern.
+**Erwartung nach dem Speichern:**
 
-**Erwartetes Ergebnis**
+- Rezension erscheint ohne Neustart,
+- Orts- und Kriterienwerte werden neu gelesen,
+- Jahreszähler erhöht sich,
+- 24-Stunden-Sperre wird sichtbar,
+- Nutzer-Score erhält Aktivitätspunkte.
 
-- neue Rezension erscheint ohne App-Neustart,
-- Kriterienwerte und Orts-Score werden aus dem Repository neu gelesen,
-- rollierender Jahreszähler erhöht sich,
-- Bewertungsformular zeigt anschließend die 24-Stunden-Sperre,
-- eigener Nutzer-Score erhält Aktivitätspunkte.
+## Station 4: Reviews und Reaktionen
 
-**Sprechtext / Kernaussagen**
+**Aktion:**
 
-- Zahlenbewertungen funktionieren auch ohne Text.
-- Ein ausreichend langer Text gibt einen kleinen zusätzlichen Aktivitätsbonus.
-- Die 24-Stunden-Regel begrenzt kurzfristiges Spam-Verhalten.
-
-## Station 7: Reviews, Sortierung und Reaktionen
-
-**Aktion**
-
-- zwischen `Rezent` und `Beliebt` wechseln,
+- zwischen zeitbasierter Sortierung und `Beliebt` wechseln,
 - einen langen Text auf- und einklappen,
-- bei einer fremden Rezension Like oder Dislike antippen,
-- dieselbe Reaktion erneut antippen oder zur Gegenseite wechseln.
+- bei einer fremden Rezension Like oder Dislike setzen,
+- dieselbe Reaktion erneut antippen oder wechseln.
 
-**Sprechtext / Kernaussagen**
+Nach Umsetzung von Issue #36 heißt die zeitbasierte Sortierung `Zuletzt`; davor kann in einem Zwischenstand noch `Rezent` sichtbar sein.
 
-- Rezent sortiert nach Zeitstempel.
-- Beliebt berücksichtigt Netto-Reaktionen und Alter.
+**Kernaussagen:**
+
+- Zeitbasierte Sortierung ordnet nach neuestem Zeitstempel.
+- `Beliebt` berücksichtigt Netto-Reaktionen und Alter.
 - Pro Nutzer und Review ist höchstens eine Reaktion möglich.
 - Eigene Reviews können nicht selbst bewertet werden.
-- Reaktionen bleiben nach App-Neustart erhalten.
+- Reaktionen bleiben persistent.
+- Pro Ort werden höchstens 50 nichtleere Rezensionstexte gespeichert; numerische Bewertungsdaten bleiben erhalten.
 
-**Aufbewahrungshinweis**
+## Station 5: Öffentliches Profil
 
-Pro Ort bleiben höchstens 50 nichtleere Rezensionstexte gespeichert. Wird ein Text verdrängt, bleiben Kriterienwerte, Nutzerbezug und Zeitstempel erhalten und fließen weiterhin in die Scores ein.
+**Aktion:** Autor-Icon oder Pseudonym einer fremden Rezension antippen.
 
-## Station 8: Öffentliches Profil eines Review-Autors
+**Zu zeigen:**
 
-**Aktion**
-
-Icon oder Pseudonym eines fremden Review-Autors antippen.
-
-**Zu zeigen**
-
-- Community-Profil,
 - Gesamt-Score,
 - Aktivität,
 - Reputation,
 - aggregierte Bewertungs- und Reaktionszahlen,
-- Datenschutzhinweis,
-- keine chronologische Historie.
+- keine chronologische Ortshistorie.
 
-**Sprechtext / Kernaussagen**
+**Kernaussage:** Einzelne Rezensionen bleiben beim Ort sichtbar, werden aber nicht zu einem öffentlichen Bewegungsprofil zusammengeführt.
 
-- Einzelne Reviews bleiben am jeweiligen Ort sichtbar.
-- Das öffentliche Profil führt diese Orte nicht zu einem Bewegungsprofil zusammen.
-- Die sichtbaren Daten sind auf Community-Vertrauen und Reputation beschränkt.
+Danach zurückgehen. Der Orts- und Review-Kontext soll erhalten bleiben.
 
-**Navigationstest**
+## Station 6: Eigenes Profil und Hilfe
 
-Zurück zur Ortsansicht gehen. Der vorherige Ort und Review-Kontext sollen erhalten bleiben.
+**Aktion:** Eigenes Profil öffnen und anschließend den vollständigen Hilfefluss kurz aufrufen.
 
-## Station 9: Eigenes Profil und Nutzer-Score
+**Zu zeigen:**
 
-**Aktion**
-
-Eigenes Profil über das Profil-Icon öffnen.
-
-**Zu zeigen**
-
-- Pseudonym und neutrales Icon,
-- Gesamt-Score,
+- dynamischer Gesamt-Score,
 - Aktivität und Reputation,
-- Aufschlüsselung nach Bewertung, Text und Reaktion,
+- Punkteaufschlüsselung,
 - private Bewertungshistorie,
-- gerade erstellten Eintrag,
+- neu erstellten Eintrag,
 - Hilfe und vorbereitete Einstellungen.
 
-**Sprechtext / Kernaussagen**
+**Account-Abgrenzung:**
 
-- Der Nutzer-Score ist kein statisches Seed-Feld, sondern wird dynamisch berechnet.
-- Erkundungsboni nehmen ab.
-- nahe Ortscluster und massenhafte Reaktionen werden begrenzt.
-- Reputation wächst logarithmisch aus hilfreichen Reaktionen auf eigene Texte.
-- Das eigene Profil darf die vollständige private Historie zeigen; öffentliche Profile nicht.
+> Für den MVP verwenden wir einen bereits angemeldeten, pseudonymisierten Demo-Nutzer. Registrierung, Login und Profilerstellung sind bewusst nicht umgesetzt. Der Schwerpunkt liegt auf Ortsentdeckung, Bewertungen, Scores, Reviews und Datenschutz.
 
-## Station 10: Hilfe erneut öffnen
+## 6. Architekturblock für Morris
 
-**Aktion**
+Empfohlene Dauer: etwa zwei Minuten.
 
-Im eigenen Profil den vollständigen Hilfefluss öffnen und direkt wieder schließen.
+### 6.1 Jetpack Compose und Android-Konventionen
 
-**Sprechtext / Kernaussagen**
+- Deklarative Kotlin-UI statt XML-Layouts.
+- Material 3 für konsistente Android-Komponenten.
+- UI-Zustand und Aktionen werden möglichst über Parameter und Callbacks weitergegeben.
+- Fachliche Regeln liegen nicht direkt in Composables.
 
-- Onboarding-Inhalte bleiben später erreichbar.
-- Hilfe und Einstellungen sind private Profilaktionen.
-- Öffentliche Profile zeigen diese Funktionen nicht.
-
-## Station 11: Account-Abgrenzung erklären
-
-**Sprechtext**
-
-> Für den MVP verwenden wir einen bereits angemeldeten, pseudonymisierten Demo-Nutzer. Registrierung, Login und Profilerstellung sind bewusst nicht umgesetzt. Der Schwerpunkt liegt auf Ortsentdeckung, Bewertungen, Scores, Reviews und Datenschutz. Ein produktiver Account-Lifecycle würde zusätzlich Backend, Authentifizierung, Wiederherstellung, Einwilligungen, Kontolöschung und Synchronisation erfordern.
-
-**Wichtig**
-
-Diese Aussage als bewusste Scope-Entscheidung formulieren, nicht als überraschend fehlende Funktion.
-
-## Station 12: Architektur kurz erklären
-
-Empfohlene Dauer: 60 bis 90 Sekunden.
-
-**Schichten**
+### 6.2 MVVM-orientierte Struktur
 
 ```text
 Compose-Screens
@@ -361,23 +385,37 @@ Domain-Use-Cases und Repository-Interfaces
 Local-first-Repositories und JSON-Arbeitskopien
 ```
 
-**Konkrete Beispiele**
+Konkrete Beispiele:
 
-- `CalculatePlaceScoreUseCase` enthält die Bewertungsalterung.
-- `CalculateUserScoreUseCase` enthält Aktivität und Reputation.
-- `ReviewSubmissionCooldownPolicy` enthält die 24-Stunden-Regel.
-- `ProfileViewModel` trennt `OWN` und `PUBLIC`.
-- `MockPlaceDataSource` kapselt persistente JSON-Arbeitskopien und Textaufbewahrung.
+- `CalculatePlaceScoreUseCase`: Bewertungsalterung,
+- `CalculateUserScoreUseCase`: Aktivität und Reputation,
+- `ReviewSubmissionCooldownPolicy`: 24-Stunden-Regel,
+- `ProfileViewModel`: Trennung von `OWN` und `PUBLIC`,
+- `MockPlaceDataSource`: persistente JSON-Arbeitskopien und Textaufbewahrung.
 
-**Pragmatische technische Entscheidungen**
+### 6.3 Repository Pattern
+
+- UI und ViewModel-artige Klassen lesen keine JSON-Dateien direkt.
+- Repository-Interfaces bilden fachliche Datenzugriffsverträge.
+- Die Local-first-Implementierungen können später durch Remote-Repositories ergänzt werden.
+
+### 6.4 Stateful und stateless Composables
+
+- Stateless Composables erhalten sichtbaren Zustand und Callbacks von außen.
+- Stateful Composables koordinieren Zustand mit `remember`, `rememberSaveable` oder über ViewModel-artige State-Holder.
+- `Place2BeApp` ist die stateful Composition Root für Navigation, Auswahlzustände und Abhängigkeiten.
+- Kleinere Darstellungskomponenten bleiben möglichst stateless.
+- In `MapScreenWithRatingEntry` verbleibt aus pragmatischen MVP-Gründen lokaler UI-Zustand für Slider, Textfeld, Sortierung, Aufklappen und Scrollposition.
+
+### 6.5 Bekannte technische Kompromisse
 
 - Navigation über Compose-Zustand statt Navigation Compose,
-- ViewModel-artige Kotlin-Klassen statt durchgängiger nativer Lifecycle-ViewModels,
-- manuelle Zusammensetzung statt Dependency-Injection-Framework.
+- nicht durchgängig native Lifecycle-`ViewModel`-Basisklassen,
+- manuelle Dependency-Zusammensetzung,
+- simulierte Standortbestätigung,
+- lokale statt synchronisierte Daten.
 
-Diese Punkte sind bekannte MVP-Kompromisse und mögliche Refactoring-Schritte.
-
-## 5. Ehrlich zu benennende Einschränkungen
+## 7. Ehrlich zu benennende Einschränkungen
 
 - Mock-Map statt echter Live-Karte,
 - simulierte Standortbestätigung,
@@ -398,17 +436,12 @@ Nicht mehr als offen darstellen:
 - Review-Reaktionen: accountgebunden umgesetzt,
 - Onboarding: integriert und persistent umgesetzt.
 
-## 6. Fallback-Szenarien
+## 8. Fallback-Szenarien
 
 ### A. Emulator wird nicht erkannt
 
 1. Device Manager öffnen und Emulator starten.
-2. ADB prüfen:
-
-```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices
-```
-
+2. ADB prüfen.
 3. Bei Bedarf ADB neu starten:
 
 ```powershell
@@ -431,8 +464,6 @@ Danach App erneut starten.
 - alternativ Bildschirmaufnahme verwenden,
 - Unit-Test-Ergebnis und Architektur anhand der Folien erklären.
 
-APK installieren:
-
 ```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r "app\build\outputs\apk\debug\app-debug.apk"
 ```
@@ -442,24 +473,23 @@ APK installieren:
 1. App einmal neu öffnen.
 2. Nicht sofort Daten löschen, damit bereits erzeugte Zustände erhalten bleiben.
 3. Falls der Fehler reproduzierbar bleibt, zur Bildschirmaufnahme wechseln.
-4. Kurz transparent sagen, dass der gezeigte Flow lokal bereits getestet wurde.
+4. Kurz transparent erklären, dass der Flow lokal getestet wurde.
 
 ### E. Einzelne Aktion funktioniert nicht
 
-Nicht lange in der Oberfläche suchen. Zum nächsten fachlichen Punkt wechseln und die vorbereiteten Screenshots oder die Aufnahme verwenden.
+Nicht lange in der Oberfläche suchen. Zum nächsten fachlichen Punkt wechseln und Screenshots oder Aufnahme verwenden.
 
-## 7. Kurzfassung für den Notfall
+## 9. Kurzfassung für Zeitnot
 
-Falls nur noch drei Minuten verfügbar sind:
+1. GitHub-Issue und Prototyp zeigen.
+2. README und Produktidee erklären.
+3. Onboarding-Seite mit Kriterien und Alterung zeigen.
+4. Karte öffnen und einen Ort auswählen.
+5. Bookmark und Bewertung mit Text demonstrieren.
+6. eigenes und öffentliches Profil vergleichen.
+7. Morris erklärt Compose, MVVM, Repository und State.
+8. Mock-Map, simulierten Standort und Demo-Nutzer als Abgrenzung nennen.
 
-1. Onboarding-Seite mit Kriterien zeigen.
-2. Karte öffnen und einen Ort auswählen.
-3. Detailansicht mit Bookmark und Reviews zeigen.
-4. Bewertung mit Text speichern.
-5. eigenes Profil mit Score und Historie zeigen.
-6. fremdes Profil öffnen und Datenschutzbegrenzung erklären.
-7. Local-first, Mock-Map, simulierten Standort und Demo-Nutzer als Abgrenzung nennen.
+## 10. Abschlussbotschaft
 
-## 8. Abschlussbotschaft
-
-> place2be demonstriert nicht nur eine Oberfläche, sondern einen vollständigen Local-first-Flow: öffentliche Orte entdecken, aktuelle Eindrücke bewerten, hilfreiche Reviews einordnen und Reputation sichtbar machen – mit bewusst begrenzten öffentlichen Profildaten und klar dokumentiertem Ausbaupfad zu Karte, Standort, Backend und echten Accounts.
+> place2be demonstriert nicht nur eine Oberfläche, sondern einen vollständigen Local-first-Flow: öffentliche Orte entdecken, aktuelle Eindrücke bewerten, hilfreiche Reviews einordnen und Reputation sichtbar machen – mit bewusst begrenzten öffentlichen Profildaten und einem klar dokumentierten Ausbaupfad zu echter Karte, Standortprüfung, Backend und Accounts.
