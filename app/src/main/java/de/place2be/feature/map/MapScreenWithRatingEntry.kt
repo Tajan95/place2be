@@ -418,7 +418,7 @@ private fun InlinePlaceDetailSheet(
                 modifier = Modifier.weight(1f),
             )
             ReviewSortButton(
-                label = "Rezent",
+                label = "Zuletzt",
                 selected = reviewSort == ReviewSort.RECENT,
                 onClick = { reviewSortName = ReviewSort.RECENT.name },
             )
