@@ -3,7 +3,9 @@ package de.place2be.feature.map
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -71,6 +73,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -80,6 +83,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.place2be.R
 import de.place2be.domain.model.PlaceAttribute
 import de.place2be.domain.model.PlaceCategory
 import de.place2be.ui.component.RatingCriterion
@@ -393,27 +397,16 @@ private fun MapHeader() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menü",
-                tint = DarkInk,
-                modifier = Modifier.padding(end = 8.dp)
-            )
             Box(
-                modifier = Modifier
-                    .size(27.dp)
-                    .clip(CircleShape)
-                    .background(LeafAccent),
-                contentAlignment = Alignment.Center,
+
             ) {
-                Text(
-                    "↗",
-                    color = PureWhite,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.offset(y = (-1).dp))
+                Image(
+                    painter = painterResource(R.drawable.place2be_logo_1),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(42.dp).clip(CircleShape)
+                )
             }
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "place2be",
