@@ -261,7 +261,11 @@ private fun MockMapLayer(
     onPlaceSelected: (UUID) -> Unit,
 ) {
     val targetCamera = remember(places, markerWorldPositions) {
-        places.mapNotNull { markerWorldPositions[it.uuid] }.fitMapCamera()
+        if (places.size == markerWorldPositions.size) {
+            MapCamera()
+        } else {
+            places.mapNotNull { markerWorldPositions[it.uuid] }.fitMapCamera()
+        }
     }
     val animatedCameraCenterX by animateFloatAsState(
         targetValue = targetCamera.centerX,
@@ -313,11 +317,17 @@ private fun MockMapLayer(
                             accumulatedDrag += dragAmount
                             if (accumulatedDrag.getDistance() > viewConfiguration.touchSlop) {
                                 dragging = true
-                                panOffset += accumulatedDrag
+                                panOffset = (panOffset + accumulatedDrag).constrainedToMapSurroundings(
+                                    viewportWidthPx = size.width.toFloat(),
+                                    viewportHeightPx = size.height.toFloat(),
+                                )
                                 change.consume()
                             }
                         } else {
-                            panOffset += dragAmount
+                            panOffset = (panOffset + dragAmount).constrainedToMapSurroundings(
+                                viewportWidthPx = size.width.toFloat(),
+                                viewportHeightPx = size.height.toFloat(),
+                            )
                             change.consume()
                         }
                     }
@@ -359,8 +369,10 @@ private fun MockMapLayer(
                     viewportHeightDp = maxHeight.value,
                 )
             }
+            val mapViewportWidth = maxWidth
+            val mapViewportHeight = maxHeight
 
-            MockCityMap(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
@@ -370,7 +382,23 @@ private fun MockMapLayer(
                         translationX = size.width * camera.translationXFraction
                         translationY = size.height * camera.translationYFraction
                     },
-            )
+            ) {
+                for (row in -1..1) {
+                    for (column in -1..1) {
+                        MockMapSurroundings(
+                            tileColumn = column,
+                            tileRow = row,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .offset(
+                                    x = mapViewportWidth * column,
+                                    y = mapViewportHeight * row,
+                                ),
+                        )
+                    }
+                }
+                MockCityMap(modifier = Modifier.fillMaxSize())
+            }
 
             places.forEach { place ->
                 val position = markerWorldPositions.getValue(place.uuid).transformedBy(camera)
@@ -384,10 +412,140 @@ private fun MockMapLayer(
                         x = maxWidth * position.x - hintPlacement.side.markerAnchorOffsetDp.dp,
                         y = maxHeight * position.y -
                             MARKER_TOP_OFFSET_DP.dp -
-                            MARKER_HINT_VERTICAL_STEP_DP.dp,
+                            MARKER_HINT_MAX_VERTICAL_OFFSET_DP.dp,
                     ),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MockMapSurroundings(
+    tileColumn: Int,
+    tileRow: Int,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier.background(MapCream)) {
+        drawRect(MapCream)
+
+        val horizontalBlockCount = 11
+        val verticalBlockCount = 13
+        val blockWidth = size.width / horizontalBlockCount
+        val blockHeight = size.height / verticalBlockCount
+        repeat(verticalBlockCount) { row ->
+            repeat(horizontalBlockCount) { column ->
+                if ((row * 2 + column + tileColumn * 3 + tileRow * 5).mod(5) != 0) {
+                    drawRoundRect(
+                        color = MapBlock.copy(alpha = 0.62f),
+                        topLeft = Offset(
+                            x = column * blockWidth + blockWidth * 0.16f,
+                            y = row * blockHeight + blockHeight * 0.18f,
+                        ),
+                        size = Size(blockWidth * 0.65f, blockHeight * 0.55f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f),
+                    )
+                }
+            }
+        }
+
+        val tileOriginX = tileColumn * size.width
+        val tileOriginY = tileRow * size.height
+        fun globalPoint(x: Float, y: Float) = Offset(
+            x = size.width * x - tileOriginX,
+            y = size.height * y - tileOriginY,
+        )
+
+        val river = Path().apply {
+            val start = globalPoint(0.70f, -1.1f)
+            moveTo(start.x, start.y)
+            val firstControl = globalPoint(0.80f, -0.70f)
+            val secondControl = globalPoint(0.88f, -0.26f)
+            val centerStart = globalPoint(0.76f, 0f)
+            cubicTo(
+                firstControl.x,
+                firstControl.y,
+                secondControl.x,
+                secondControl.y,
+                centerStart.x,
+                centerStart.y,
+            )
+            val centerControlOne = globalPoint(0.64f, 0.26f)
+            val centerControlTwo = globalPoint(0.86f, 0.58f)
+            val centerEnd = globalPoint(0.68f, 1f)
+            cubicTo(
+                centerControlOne.x,
+                centerControlOne.y,
+                centerControlTwo.x,
+                centerControlTwo.y,
+                centerEnd.x,
+                centerEnd.y,
+            )
+            val southControlOne = globalPoint(0.50f, 1.42f)
+            val southControlTwo = globalPoint(0.74f, 1.65f)
+            val southEnd = globalPoint(0.60f, 2.1f)
+            cubicTo(
+                southControlOne.x,
+                southControlOne.y,
+                southControlTwo.x,
+                southControlTwo.y,
+                southEnd.x,
+                southEnd.y,
+            )
+        }
+        drawPath(
+            path = river,
+            color = MapRiver,
+            style = Stroke(width = size.width * 0.075f, cap = StrokeCap.Round),
+        )
+
+        val roadColor = MapRoad.copy(alpha = 0.9f)
+        val roadWidth = size.width * 0.035f
+        listOf(
+            Pair(globalPoint(-1.10f, -0.24f), globalPoint(2.10f, 1.21f)),
+            Pair(globalPoint(-1.10f, 1.15f), globalPoint(2.10f, -0.30f)),
+            Pair(globalPoint(-0.01f, -1.10f), globalPoint(0.55f, 2.10f)),
+            Pair(globalPoint(-1.10f, 0.46f), globalPoint(2.10f, 0.43f)),
+        ).forEach { (start, end) ->
+            drawLine(roadColor, start, end, strokeWidth = roadWidth, cap = StrokeCap.Round)
+            drawLine(MapRoadOutline, start, end, strokeWidth = 2f, cap = StrokeCap.Round)
+        }
+
+        listOf(
+            Pair(globalPoint(-1.10f, -0.62f), globalPoint(2.10f, -0.50f)),
+            Pair(globalPoint(-1.10f, 1.64f), globalPoint(2.10f, 1.42f)),
+            Pair(globalPoint(-0.72f, -1.10f), globalPoint(-0.48f, 2.10f)),
+            Pair(globalPoint(1.48f, -1.10f), globalPoint(1.30f, 2.10f)),
+        ).forEach { (start, end) ->
+            drawLine(
+                color = roadColor,
+                start = start,
+                end = end,
+                strokeWidth = roadWidth * 0.55f,
+                cap = StrokeCap.Round,
+            )
+            drawLine(MapRoadOutline, start, end, strokeWidth = 2f, cap = StrokeCap.Round)
+        }
+
+        listOf(
+            Pair(globalPoint(0.57f, -0.52f), globalPoint(0.83f, -0.50f)),
+            Pair(globalPoint(0.49f, 1.48f), globalPoint(0.75f, 1.46f)),
+        ).forEach { (start, end) ->
+            drawLine(MapRoadOutline, start, end, strokeWidth = roadWidth * 0.72f, cap = StrokeCap.Round)
+            drawLine(MapRoad, start, end, strokeWidth = roadWidth * 0.52f, cap = StrokeCap.Round)
+        }
+
+        listOf(
+            Offset(
+                size.width * (0.14f + (tileColumn + 1) * 0.11f),
+                size.height * (0.24f + (tileRow + 1) * 0.08f),
+            ),
+            Offset(
+                size.width * (0.82f - (tileRow + 1) * 0.07f),
+                size.height * (0.72f - (tileColumn + 1) * 0.09f),
+            ),
+        ).forEach { center ->
+            drawCircle(LeafSurface.copy(alpha = 0.72f), radius = blockWidth * 0.55f, center = center)
         }
     }
 }
@@ -436,8 +594,39 @@ private fun MockCityMap(modifier: Modifier = Modifier) {
             drawLine(MapRoadOutline, start, end, strokeWidth = 2f, cap = StrokeCap.Round)
         }
 
+        listOf(0.27f, 0.61f).forEach { yFraction ->
+            val start = Offset(size.width * 0.61f, size.height * yFraction)
+            val end = Offset(size.width * 0.86f, size.height * (yFraction + 0.025f))
+            drawLine(MapRoadOutline, start, end, strokeWidth = roadWidth * 0.72f, cap = StrokeCap.Round)
+            drawLine(MapRoad, start, end, strokeWidth = roadWidth * 0.52f, cap = StrokeCap.Round)
+        }
+
+        val plazaCenter = Offset(size.width * 0.49f, size.height * 0.31f)
+        drawCircle(MapRoadOutline, radius = size.width * 0.075f, center = plazaCenter)
+        drawCircle(MapRoad, radius = size.width * 0.068f, center = plazaCenter)
+        drawCircle(AccessibilityGold.copy(alpha = 0.25f), radius = size.width * 0.025f, center = plazaCenter)
+
+        val tramStart = Offset(size.width * 0.06f, size.height * 0.72f)
+        val tramEnd = Offset(size.width * 0.58f, size.height * 0.10f)
+        drawLine(
+            color = AccessibilityGold.copy(alpha = 0.38f),
+            start = tramStart,
+            end = tramEnd,
+            strokeWidth = 5f,
+            cap = StrokeCap.Round,
+        )
+        listOf(0.18f, 0.48f, 0.78f).forEach { progress ->
+            val stop = Offset(
+                x = tramStart.x + (tramEnd.x - tramStart.x) * progress,
+                y = tramStart.y + (tramEnd.y - tramStart.y) * progress,
+            )
+            drawCircle(MapRoad, radius = 7f, center = stop)
+            drawCircle(AccessibilityGold, radius = 4f, center = stop)
+        }
+
         drawCircle(LeafSurface, radius = size.width * 0.19f, center = Offset(size.width * 0.2f, size.height * 0.18f))
         drawCircle(LeafAccent.copy(alpha = 0.16f), radius = size.width * 0.13f, center = Offset(size.width * 0.42f, size.height * 0.55f))
+        drawCircle(LeafSurface.copy(alpha = 0.78f), radius = size.width * 0.10f, center = Offset(size.width * 0.86f, size.height * 0.14f))
         repeat(22) { index ->
             val x = ((index * 97) % 100) / 100f * size.width
             val y = ((index * 53 + 17) % 100) / 100f * size.height
@@ -522,7 +711,7 @@ private fun PlaceMarker(
     }
     Row(
         modifier = modifier
-            .height((MARKER_HEIGHT_DP + 2f * MARKER_HINT_VERTICAL_STEP_DP).dp),
+            .height((MARKER_HEIGHT_DP + 2f * MARKER_HINT_MAX_VERTICAL_OFFSET_DP).dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (hintPlacement.side == MarkerHintSide.LEFT) {
@@ -1267,16 +1456,31 @@ private fun String.toggleSelection(value: String): String {
 internal fun List<MapPlaceUiState>.fitIntoMapViewport(): Map<UUID, MapViewportPosition> {
     if (isEmpty()) return emptyMap()
 
-    val minX = minOf(MapPlaceUiState::mapXFraction)
-    val maxX = maxOf(MapPlaceUiState::mapXFraction)
-    val minY = minOf(MapPlaceUiState::mapYFraction)
-    val maxY = maxOf(MapPlaceUiState::mapYFraction)
+    val centralPlaces = filterNot { it.uuid in EXPANDED_MOCK_PLACE_POSITIONS }
+        .ifEmpty { this }
+    val minX = centralPlaces.minOf(MapPlaceUiState::mapXFraction)
+    val maxX = centralPlaces.maxOf(MapPlaceUiState::mapXFraction)
+    val minY = centralPlaces.minOf(MapPlaceUiState::mapYFraction)
+    val maxY = centralPlaces.maxOf(MapPlaceUiState::mapYFraction)
 
     val rawPositions = map { place ->
-        place to MapViewportPosition(
-            x = place.mapXFraction.fitFraction(minX, maxX, MAP_VIEWPORT_START_X, MAP_VIEWPORT_END_X),
-            y = place.mapYFraction.fitFraction(minY, maxY, MAP_VIEWPORT_START_Y, MAP_VIEWPORT_END_Y),
-        )
+        place to (
+            EXPANDED_MOCK_PLACE_POSITIONS[place.uuid]
+                ?: MapViewportPosition(
+                    x = place.mapXFraction.fitFraction(
+                        minX,
+                        maxX,
+                        MAP_VIEWPORT_START_X,
+                        MAP_VIEWPORT_END_X,
+                    ),
+                    y = place.mapYFraction.fitFraction(
+                        minY,
+                        maxY,
+                        MAP_VIEWPORT_START_Y,
+                        MAP_VIEWPORT_END_Y,
+                    ),
+                )
+            )
     }
 
     val occupiedPositions = mutableListOf<MapViewportPosition>()
@@ -1287,12 +1491,29 @@ internal fun List<MapPlaceUiState>.fitIntoMapViewport(): Map<UUID, MapViewportPo
                 .thenBy { it.first.uuid.toString() },
         )
         .associate { (place, rawPosition) ->
+            val isExpandedMockPlace = place.uuid in EXPANDED_MOCK_PLACE_POSITIONS
+            val horizontalRange = if (isExpandedMockPlace) {
+                MAP_EXTENDED_START_X..MAP_EXTENDED_END_X
+            } else {
+                MAP_VIEWPORT_START_X..MAP_VIEWPORT_END_X
+            }
+            val verticalRange = if (isExpandedMockPlace) {
+                MAP_EXTENDED_START_Y..MAP_EXTENDED_END_Y
+            } else {
+                MAP_VIEWPORT_START_Y..MAP_VIEWPORT_END_Y
+            }
             val resolvedPosition = MARKER_OFFSET_CANDIDATES
                 .asSequence()
                 .map { offset ->
                     MapViewportPosition(
-                        x = (rawPosition.x + offset.x).coerceIn(MAP_VIEWPORT_START_X, MAP_VIEWPORT_END_X),
-                        y = (rawPosition.y + offset.y).coerceIn(MAP_VIEWPORT_START_Y, MAP_VIEWPORT_END_Y),
+                        x = (rawPosition.x + offset.x).coerceIn(
+                            horizontalRange.start,
+                            horizontalRange.endInclusive,
+                        ),
+                        y = (rawPosition.y + offset.y).coerceIn(
+                            verticalRange.start,
+                            verticalRange.endInclusive,
+                        ),
                     )
                 }
                 .distinct()
@@ -1390,9 +1611,9 @@ internal fun List<MapPlaceUiState>.resolveMarkerHintPlacements(
             .thenBy { it.uuid.toString() },
     ).associate { place ->
         val position = positions.getValue(place.uuid)
-        val side = MarkerHintSide.entries.minBy { candidate ->
+        val placement = MARKER_HINT_PLACEMENT_CANDIDATES.minBy { candidate ->
             val bounds = position.hintCardBounds(
-                side = candidate,
+                placement = candidate,
                 viewportWidthDp = viewportWidthDp,
                 viewportHeightDp = viewportHeightDp,
             )
@@ -1406,16 +1627,17 @@ internal fun List<MapPlaceUiState>.resolveMarkerHintPlacements(
                 .filter { overlap -> overlap > 0f }
             markerOverlaps.size * MARKER_COLLISION_PENALTY +
                 hintOverlaps.size * HINT_COLLISION_PENALTY +
-                bounds.horizontalOverflow * HINT_VIEWPORT_OVERFLOW_PENALTY +
+                bounds.viewportOverflow * HINT_VIEWPORT_OVERFLOW_PENALTY +
                 markerOverlaps.sum() * MARKER_OVERLAP_AREA_PENALTY +
-                hintOverlaps.sum()
+                hintOverlaps.sum() +
+                candidate.verticalOffsetSteps * HINT_VERTICAL_OFFSET_PENALTY
         }
         occupiedHintBounds += position.hintCardBounds(
-            side = side,
+            placement = placement,
             viewportWidthDp = viewportWidthDp,
             viewportHeightDp = viewportHeightDp,
         )
-        place.uuid to MarkerHintPlacement(side = side)
+        place.uuid to placement
     }
 }
 
@@ -1429,42 +1651,46 @@ internal fun List<MapPlaceUiState>.resolveMarkerHintSides(
     viewportHeightDp = viewportHeightDp,
 ).mapValues { (_, placement) -> placement.side }
 
-private data class MapViewportBounds(
+internal data class MapViewportBounds(
     val left: Float,
     val top: Float,
     val right: Float,
     val bottom: Float,
 ) {
-    val horizontalOverflow: Float
-        get() = maxOf(0f, -left) + maxOf(0f, right - 1f)
+    val viewportOverflow: Float
+        get() = maxOf(0f, -left) +
+            maxOf(0f, right - 1f) +
+            maxOf(0f, -top) +
+            maxOf(0f, bottom - 1f)
 
     fun overlapArea(other: MapViewportBounds): Float =
         maxOf(0f, minOf(right, other.right) - maxOf(left, other.left)) *
             maxOf(0f, minOf(bottom, other.bottom) - maxOf(top, other.top))
 }
 
-private fun MapViewportPosition.hintCardBounds(
-    side: MarkerHintSide,
+internal fun MapViewportPosition.hintCardBounds(
+    placement: MarkerHintPlacement,
     viewportWidthDp: Float,
     viewportHeightDp: Float,
 ): MapViewportBounds {
-    val leftDp = when (side) {
+    val leftDp = when (placement.side) {
         MarkerHintSide.LEFT -> -(MARKER_HALF_WIDTH_DP + MARKER_HINT_GAP_DP + MARKER_HINT_WIDTH_DP)
         MarkerHintSide.RIGHT -> MARKER_RIGHT_HALF_WIDTH_DP + MARKER_HINT_GAP_DP
     }
-    val rightDp = when (side) {
+    val rightDp = when (placement.side) {
         MarkerHintSide.LEFT -> -(MARKER_HALF_WIDTH_DP + MARKER_HINT_GAP_DP)
         MarkerHintSide.RIGHT -> MARKER_RIGHT_HALF_WIDTH_DP + MARKER_HINT_GAP_DP + MARKER_HINT_WIDTH_DP
     }
     return MapViewportBounds(
         left = x + leftDp / viewportWidthDp,
-        top = y - MARKER_TOP_OFFSET_DP / viewportHeightDp,
+        top = y + (placement.verticalOffsetDp - MARKER_TOP_OFFSET_DP) / viewportHeightDp,
         right = x + rightDp / viewportWidthDp,
-        bottom = y + (MARKER_HEIGHT_DP - MARKER_TOP_OFFSET_DP) / viewportHeightDp,
+        bottom = y +
+            (placement.verticalOffsetDp + MARKER_HEIGHT_DP - MARKER_TOP_OFFSET_DP) / viewportHeightDp,
     )
 }
 
-private fun MapViewportPosition.markerBounds(
+internal fun MapViewportPosition.markerBounds(
     viewportWidthDp: Float,
     viewportHeightDp: Float,
 ): MapViewportBounds = MapViewportBounds(
@@ -1473,6 +1699,22 @@ private fun MapViewportPosition.markerBounds(
     right = x + MARKER_RIGHT_HALF_WIDTH_DP / viewportWidthDp,
     bottom = y + (MARKER_HEIGHT_DP - MARKER_TOP_OFFSET_DP) / viewportHeightDp,
 )
+
+internal fun Offset.constrainedToMapSurroundings(
+    viewportWidthPx: Float,
+    viewportHeightPx: Float,
+): Offset {
+    val horizontalLimit = viewportWidthPx *
+        (MAP_SURROUNDINGS_SCALE - 1f) / 2f *
+        MAP_PAN_LIMIT_FRACTION
+    val verticalLimit = viewportHeightPx *
+        (MAP_SURROUNDINGS_SCALE - 1f) / 2f *
+        MAP_PAN_LIMIT_FRACTION
+    return Offset(
+        x = x.coerceIn(-horizontalLimit, horizontalLimit),
+        y = y.coerceIn(-verticalLimit, verticalLimit),
+    )
+}
 
 private fun MapViewportPosition.overlapsMarker(other: MapViewportPosition): Boolean =
     abs(x - other.x) < MIN_MARKER_X_DISTANCE && abs(y - other.y) < MIN_MARKER_Y_DISTANCE
@@ -1492,11 +1734,29 @@ private const val MAP_VIEWPORT_START_X = 0.10f
 private const val MAP_VIEWPORT_END_X = 0.90f
 private const val MAP_VIEWPORT_START_Y = 0.20f
 private const val MAP_VIEWPORT_END_Y = 0.66f
+private const val MAP_EXTENDED_START_X = -0.40f
+private const val MAP_EXTENDED_END_X = 1.40f
+private const val MAP_EXTENDED_START_Y = -0.24f
+private const val MAP_EXTENDED_END_Y = 1.12f
 private const val MAP_CAMERA_TARGET_X = (MAP_VIEWPORT_START_X + MAP_VIEWPORT_END_X) / 2f
 private const val MAP_CAMERA_TARGET_Y = (MAP_VIEWPORT_START_Y + MAP_VIEWPORT_END_Y) / 2f
 private const val MAP_CAMERA_TARGET_WIDTH = MAP_VIEWPORT_END_X - MAP_VIEWPORT_START_X
 private const val MAP_CAMERA_TARGET_HEIGHT = MAP_VIEWPORT_END_Y - MAP_VIEWPORT_START_Y
 private const val MAP_MAX_ZOOM = 2f
+private const val MAP_SURROUNDINGS_SCALE = 3f
+private const val MAP_PAN_LIMIT_FRACTION = 0.85f
+private val EXPANDED_MOCK_PLACE_POSITIONS = mapOf(
+    UUID.fromString("2a9e9770-521c-4e99-992d-e0073cfca7da") to
+        MapViewportPosition(x = 1.15f, y = -0.08f),
+    UUID.fromString("012ee313-7d5b-406c-b826-6ca3c92b39c8") to
+        MapViewportPosition(x = -0.24f, y = 1.10f),
+    UUID.fromString("0e67cdc6-e0e1-4e39-aa24-93960178b52c") to
+        MapViewportPosition(x = -0.38f, y = 0.20f),
+    UUID.fromString("25424336-283f-4ad8-b79a-7e7d8dff5beb") to
+        MapViewportPosition(x = 1.38f, y = 0.72f),
+    UUID.fromString("1eb01467-68ed-4a26-a8c4-25aed9432c65") to
+        MapViewportPosition(x = 0.30f, y = -0.22f),
+)
 internal const val MIN_MARKER_X_DISTANCE = 0.12f
 internal const val MIN_MARKER_Y_DISTANCE = 0.10f
 private const val MARKER_WIDTH_DP = 55f
@@ -1504,13 +1764,28 @@ private const val MARKER_HALF_WIDTH_DP = 27f
 private const val MARKER_RIGHT_HALF_WIDTH_DP = MARKER_WIDTH_DP - MARKER_HALF_WIDTH_DP
 private const val MARKER_HEIGHT_DP = 66f
 private const val MARKER_TOP_OFFSET_DP = 36f
-private const val MARKER_HINT_VERTICAL_STEP_DP = 0f
+private const val MARKER_HINT_VERTICAL_STEP_DP = 72f
+private const val MARKER_HINT_MAX_VERTICAL_OFFSET_DP = 3f * MARKER_HINT_VERTICAL_STEP_DP
 private const val MARKER_HINT_GAP_DP = 4f
 private const val MARKER_HINT_WIDTH_DP = 148f
 private const val MARKER_COLLISION_PENALTY = 1_000_000f
 private const val HINT_COLLISION_PENALTY = 10_000f
 private const val HINT_VIEWPORT_OVERFLOW_PENALTY = 100f
 private const val MARKER_OVERLAP_AREA_PENALTY = 100f
+private const val HINT_VERTICAL_OFFSET_PENALTY = 1_000f
+private val MarkerHintPlacement.verticalOffsetSteps: Float
+    get() = abs(verticalOffsetDp) / MARKER_HINT_VERTICAL_STEP_DP
+private val MARKER_HINT_PLACEMENT_CANDIDATES = buildList {
+    add(MarkerHintPlacement(MarkerHintSide.RIGHT))
+    add(MarkerHintPlacement(MarkerHintSide.LEFT))
+    for (step in 1..3) {
+        val offset = step * MARKER_HINT_VERTICAL_STEP_DP
+        add(MarkerHintPlacement(MarkerHintSide.RIGHT, -offset))
+        add(MarkerHintPlacement(MarkerHintSide.LEFT, -offset))
+        add(MarkerHintPlacement(MarkerHintSide.RIGHT, offset))
+        add(MarkerHintPlacement(MarkerHintSide.LEFT, offset))
+    }
+}
 private val MARKER_OFFSET_CANDIDATES: List<MapViewportPosition> = buildList {
     for (radius in 0..4) {
         for (yStep in -radius..radius) {

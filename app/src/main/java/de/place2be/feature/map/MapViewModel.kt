@@ -173,7 +173,10 @@ internal fun List<MapPlaceUiState>.filteredBy(selection: MapFilterSelection): Li
     }
 
 internal fun List<MapPlaceUiState>.popularFirst(): List<MapPlaceUiState> =
-    filter(MapPlaceUiState::hasReviews).sortedByDescending(MapPlaceUiState::currentScore)
+    filter { place -> place.hasReviews && place.currentScore >= POPULAR_PLACE_SCORE }
+        .sortedByDescending(MapPlaceUiState::currentScore)
 
 internal fun List<MapPlaceUiState>.newestBookmarksFirst(): List<MapPlaceUiState> =
     filter(MapPlaceUiState::isBookmarked).sortedByDescending { it.bookmarkedAtMillis }
+
+private const val POPULAR_PLACE_SCORE = 4.0

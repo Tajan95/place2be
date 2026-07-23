@@ -264,7 +264,7 @@ class MockPlaceDataSource private constructor(
     companion object {
         private const val ASSET_DIRECTORY = "mockdata"
         private const val SEED_VERSION_FILE = ".seed-version"
-        private const val SEED_VERSION = 2
+        private const val SEED_VERSION = 3
         private const val MAX_STORED_TEXT_REVIEWS_PER_PLACE = 50
 
         fun create(context: Context): MockPlaceDataSource {
