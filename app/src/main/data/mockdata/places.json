@@ -58,5 +58,65 @@
     "locationHint": "Frankfurt am Main, Sachsenhausen",
     "attributes": ["LANGUAGE_AND_CULTURE", "SEATING", "SHADE"],
     "initialScore": 4.2
+  },
+  {
+    "uuid": "2a9e9770-521c-4e99-992d-e0073cfca7da",
+    "name": "Zeil",
+    "category": "SHOPPING_STREET",
+    "description": "Belebte Einkaufsstraße mit Cafés, Geschäften und wechselnden Stadtaktionen.",
+    "imageReference": null,
+    "latitude": 50.1147,
+    "longitude": 8.6823,
+    "locationHint": "Frankfurt am Main, Innenstadt",
+    "attributes": ["ACCESSIBLE", "FOOD_AND_DRINK", "LANGUAGE_AND_CULTURE", "TIME_DEPENDENT_EVENT"],
+    "initialScore": 3.8
+  },
+  {
+    "uuid": "012ee313-7d5b-406c-b826-6ca3c92b39c8",
+    "name": "Skyline Plaza",
+    "category": "SHOPPING_CENTER",
+    "description": "Überdachtes Einkaufszentrum mit Dachgarten, Gastronomie und barrierefreien Wegen.",
+    "imageReference": null,
+    "latitude": 50.1096,
+    "longitude": 8.6522,
+    "locationHint": "Frankfurt am Main, Gallus",
+    "attributes": ["ACCESSIBLE", "AIR_CONDITIONED", "COVERED", "FOOD_AND_DRINK", "PUBLIC_TOILETS"],
+    "initialScore": 3.7
+  },
+  {
+    "uuid": "0e67cdc6-e0e1-4e39-aa24-93960178b52c",
+    "name": "Bockenheim",
+    "category": "DISTRICT",
+    "description": "Lebendiges Stadtviertel mit kleinen Läden, Gastronomie und kulturellen Treffpunkten.",
+    "imageReference": null,
+    "latitude": 50.1230,
+    "longitude": 8.6408,
+    "locationHint": "Frankfurt am Main, Bockenheim",
+    "attributes": ["FOOD_AND_DRINK", "LANGUAGE_AND_CULTURE", "LOCAL_EVENTS", "SEATING"],
+    "initialScore": 4.0
+  },
+  {
+    "uuid": "25424336-283f-4ad8-b79a-7e7d8dff5beb",
+    "name": "Osthafenplatz",
+    "category": "OTHER_PUBLIC_PLACE",
+    "description": "Offener Stadtraum am Hafen für Märkte, Veranstaltungen und Begegnungen.",
+    "imageReference": null,
+    "latitude": 50.1090,
+    "longitude": 8.7152,
+    "locationHint": "Frankfurt am Main, Ostend",
+    "attributes": ["ACCESSIBLE", "FOOD_AND_DRINK", "LANGUAGE_AND_CULTURE", "LOCAL_EVENTS", "TIME_DEPENDENT_EVENT"],
+    "initialScore": 4.2
+  },
+  {
+    "uuid": "1eb01467-68ed-4a26-a8c4-25aed9432c65",
+    "name": "Günthersburgpark",
+    "category": "PARK",
+    "description": "Weitläufiger Nachbarschaftspark mit Wiesen, Schatten und Platz für lokale Veranstaltungen.",
+    "imageReference": null,
+    "latitude": 50.1256,
+    "longitude": 8.6972,
+    "locationHint": "Frankfurt am Main, Bornheim",
+    "attributes": ["ACCESSIBLE", "LOCAL_EVENTS", "PUBLIC_TOILETS", "SEATING", "SHADE"],
+    "initialScore": 4.3
   }
 ]

@@ -33,5 +33,20 @@
     "uuid": "68ec3cdf-7246-4c20-8dac-e103a48c4b30",
     "displayName": "MainMoment",
     "userScore": 141
+  },
+  {
+    "uuid": "e709ecd6-414e-46f8-8d6a-72e419df2ef5",
+    "displayName": "StadtKennerin",
+    "userScore": 119
+  },
+  {
+    "uuid": "0b4f4df3-2571-4936-a511-5c780240e05f",
+    "displayName": "BarriereScout",
+    "userScore": 103
+  },
+  {
+    "uuid": "1f966d99-767a-4510-8948-a773ff1feda0",
+    "displayName": "FeierabendRunde",
+    "userScore": 91
   }
 ]

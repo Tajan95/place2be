@@ -169,6 +169,7 @@ fun MapScreenWithRatingEntry(
         MapScreen(
             places = places,
             selectedPlaceUuid = null,
+            focusedPlaceUuid = selectedPlaceUuid,
             onPlaceSelected = onPlaceSelected,
             onSelectionCleared = onSelectionCleared,
             modifier = Modifier.fillMaxSize(),
