@@ -248,3 +248,24 @@ sonstigen grün geprägten App-Komponenten ab.
 Bannerquelle. Eine produktive Werbevariante benötigt vor ihrer Einführung eine
 eigene Entscheidung zu Datenschutz, Auslieferung, Moderation, externen Links
 und pausierbarer Bewegung.
+
+## ADR-019: Erweiterte Mock-Map begrenzt jede Zeichenkachel
+
+**Status:** entschieden und umgesetzt
+
+Die erweiterte Mock-Map besteht weiterhin aus der zentralen Stadtkarte und acht
+umliegenden Zeichenkacheln. Jede umliegende Kachel wird auf ihre eigenen
+Abmessungen begrenzt. Die mittlere Umgebungskachel entfällt, weil sie vollständig
+von der deckenden Stadtkarte überzeichnet wurde.
+
+**Begründung:** Fluss und Straßen werden in zusammenhängenden Weltkoordinaten
+gezeichnet und reichen deshalb absichtlich über die Grenzen einer einzelnen
+Kachel hinaus. Ohne explizite Begrenzung zeichnet jede der neun Kacheln dieselben
+langen Pfade auch außerhalb ihres sichtbaren Bereichs. Beim vertikalen Verschieben
+entsteht dadurch besonders an den nördlichen und südlichen Übergängen unnötige
+GPU-Überzeichnung.
+
+**Konsequenz:** Das sichtbare Kartenbild und die Markerpositionen bleiben
+unverändert. Die Renderarbeit wird auf die tatsächlich sichtbaren Bestandteile
+der acht Umgebungskacheln begrenzt; die Kartenverschiebung bleibt eine reine
+`graphicsLayer`-Translation ohne erneutes Layout des Kartenunterbaums.

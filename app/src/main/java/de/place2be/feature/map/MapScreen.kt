@@ -384,6 +384,7 @@ private fun MockMapLayer(
             ) {
                 for (row in -1..1) {
                     for (column in -1..1) {
+                        if (row == 0 && column == 0) continue
                         MockMapSurroundings(
                             tileColumn = column,
                             tileRow = row,
@@ -423,7 +424,14 @@ private fun MockMapSurroundings(
     tileRow: Int,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier.background(MapCream)) {
+    Canvas(
+        modifier = modifier
+            // Roads and the river use world coordinates that intentionally
+            // extend beyond one tile. Clip each tile so the same paths are
+            // not rendered repeatedly by all surrounding canvases.
+            .clipToBounds()
+            .background(MapCream),
+    ) {
         drawRect(MapCream)
 
         val horizontalBlockCount = 11
