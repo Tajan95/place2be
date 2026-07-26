@@ -5,7 +5,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,8 +31,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.place2be.ui.theme.DarkInk
@@ -116,26 +122,82 @@ internal fun HeaderBanner(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize(),
+            ) {
                 Text(
                     text = item.label.uppercase(),
                     color = palette.accent,
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp,
+                    lineHeight = 9.sp,
                     maxLines = 1,
                 )
-                Text(
-                    text = item.message,
-                    color = DarkInk,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 13.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                AutoFittingBannerMessage(
+                    message = item.message,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AutoFittingBannerMessage(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val textMeasurer = rememberTextMeasurer()
+        val density = LocalDensity.current
+        val availableWidthPx = with(density) { maxWidth.roundToPx() }
+        val availableHeightPx = with(density) { maxHeight.roundToPx() }
+        val fittedFontSize = remember(
+            message,
+            availableWidthPx,
+            availableHeightPx,
+            density.fontScale,
+            textMeasurer,
+        ) {
+            if (availableWidthPx <= 0 || availableHeightPx <= 0) {
+                MIN_BANNER_MESSAGE_FONT_SIZE_SP
+            } else {
+                BANNER_MESSAGE_FONT_SIZE_CANDIDATES.firstOrNull { candidate ->
+                    val layout = textMeasurer.measure(
+                        text = AnnotatedString(message),
+                        style = TextStyle(
+                            fontSize = candidate.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            lineHeight = (candidate + BANNER_MESSAGE_LINE_HEIGHT_EXTRA_SP).sp,
+                        ),
+                        overflow = TextOverflow.Clip,
+                        softWrap = true,
+                        maxLines = BANNER_MESSAGE_MAX_LINES,
+                        constraints = Constraints(
+                            maxWidth = availableWidthPx,
+                            maxHeight = availableHeightPx,
+                        ),
+                    )
+                    !layout.hasVisualOverflow
+                } ?: MIN_BANNER_MESSAGE_FONT_SIZE_SP
+            }
+        }
+
+        Text(
+            text = message,
+            modifier = Modifier.fillMaxSize(),
+            color = DarkInk,
+            fontSize = fittedFontSize.sp,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = (fittedFontSize + BANNER_MESSAGE_LINE_HEIGHT_EXTRA_SP).sp,
+            maxLines = BANNER_MESSAGE_MAX_LINES,
+            overflow = TextOverflow.Clip,
+        )
     }
 }
 
@@ -169,7 +231,19 @@ private data class HeaderBannerColors(
     val accent: Color,
 )
 
-internal const val HEADER_BANNER_ROTATION_MILLIS = 10_000L
+internal const val HEADER_BANNER_ROTATION_MILLIS = 15_000L
+private const val MAX_BANNER_MESSAGE_FONT_SIZE_SP = 11f
+private const val MIN_BANNER_MESSAGE_FONT_SIZE_SP = 5f
+private const val BANNER_MESSAGE_FONT_SIZE_STEP_SP = 0.5f
+private const val BANNER_MESSAGE_LINE_HEIGHT_EXTRA_SP = 2f
+private const val BANNER_MESSAGE_MAX_LINES = 2
+private val BANNER_MESSAGE_FONT_SIZE_CANDIDATES: List<Float> = buildList {
+    var candidate = MAX_BANNER_MESSAGE_FONT_SIZE_SP
+    while (candidate >= MIN_BANNER_MESSAGE_FONT_SIZE_SP) {
+        add(candidate)
+        candidate -= BANNER_MESSAGE_FONT_SIZE_STEP_SP
+    }
+}
 private const val FLIP_HALF_DURATION_MILLIS = 600
 private const val FLIP_HALF_TURN_DEGREES = 90f
 private const val FLIP_CAMERA_DISTANCE_DP = 18f

@@ -46,8 +46,8 @@ class HeaderBannerContentTest {
     }
 
     @Test
-    fun `advertisements rotate every ten seconds`() {
-        assertEquals(10_000L, HEADER_BANNER_ROTATION_MILLIS)
+    fun `advertisements rotate every fifteen seconds`() {
+        assertEquals(15_000L, HEADER_BANNER_ROTATION_MILLIS)
     }
 
     @Test

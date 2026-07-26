@@ -231,10 +231,13 @@ und keine externe Auslieferung. Der ausgeschriebene App-Name entfällt im
 Karten-Header, während das runde App-Icon und der Profilzugang dauerhaft
 sichtbar bleiben.
 
-Wenn Systemanimationen deaktiviert sind, bleibt der erste Hinweis statisch.
+Wenn Systemanimationen deaktiviert sind, bleibt die erste Anzeige statisch.
 Damit erzeugt der Header bei reduzierter Bewegung keine fortlaufenden
-Inhaltswechsel. Andernfalls klappt der einzelne Banner alle zehn Sekunden
-innerhalb von rund 1,2 Sekunden aus und mit dem nächsten Hinweis wieder ein.
+Inhaltswechsel. Andernfalls klappt der einzelne Banner alle fünfzehn Sekunden
+innerhalb von rund 1,2 Sekunden aus und mit der nächsten Anzeige wieder ein.
+Die Schriftgröße des Anzeigentexts wird innerhalb eines festgelegten Bereichs
+an die verfügbare Bannerfläche angepasst, damit die lokalen Mock-Texte
+vollständig sichtbar bleiben.
 
 **Begründung:** Die Variante demonstriert den vorgesehenen Werbeplatz sichtbar,
 ohne eine produktive Werbe-, Tracking- oder Moderationsinfrastruktur

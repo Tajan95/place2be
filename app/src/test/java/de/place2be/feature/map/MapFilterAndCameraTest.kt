@@ -129,7 +129,7 @@ class MapFilterAndCameraTest {
     }
 
     @Test
-    fun `selected marker is focused in lower half of map`() {
+    fun `selected marker is focused near the vertical center of map`() {
         val offset = MapViewportPosition(x = 0.2f, y = 0.1f).focusOffset()
         val focusedPosition = MapViewportPosition(
             x = 0.2f + offset.x,
@@ -137,8 +137,8 @@ class MapFilterAndCameraTest {
         )
 
         assertEquals(0.5f, focusedPosition.x, FLOAT_TOLERANCE)
-        assertEquals(0.62f, focusedPosition.y, FLOAT_TOLERANCE)
-        assertTrue(focusedPosition.y > 0.5f)
+        assertEquals(0.49f, focusedPosition.y, FLOAT_TOLERANCE)
+        assertTrue(focusedPosition.y in 0.45f..0.5f)
     }
 
     @Test

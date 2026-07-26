@@ -1692,7 +1692,7 @@ private enum class MapBottomPanel {
 private const val SELECTION_SEPARATOR = "|"
 private const val MAP_MOVE_DURATION_MILLIS = 550
 private const val MAP_FOCUS_X = 0.5f
-private const val MAP_FOCUS_Y = 0.62f
+private const val MAP_FOCUS_Y = 0.49f
 private const val MAP_VIEWPORT_START_X = 0.10f
 private const val MAP_VIEWPORT_END_X = 0.90f
 private const val MAP_VIEWPORT_START_Y = 0.20f
